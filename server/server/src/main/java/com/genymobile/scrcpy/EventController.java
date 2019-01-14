@@ -153,7 +153,7 @@ public class EventController {
                 injectText(controlEvent.getText());
                 break;
             case ControlEvent.TYPE_MOUSE:
-                injectMouse(controlEvent.getAction(), controlEvent.getPoints(), controlEvent.getScreenSize());
+                injectMouse(controlEvent.getAction(), controlEvent.getPoints(), controlEvent.getIds(), controlEvent.getScreenSize());
                 break;
             case ControlEvent.TYPE_SCROLL:
                 injectScroll(controlEvent.getPosition(), controlEvent.getHScroll(), controlEvent.getVScroll());
@@ -194,7 +194,7 @@ public class EventController {
         return true;
     }
 
-    private boolean injectMouse(int action, Point[] points, Size frameSize) {
+    private boolean injectMouse(int action, Point[] points, int[] ids, Size frameSize) {
         Ln.i(String.format("action: %d, points: %s, size: %s", action, Arrays.toString(points), frameSize));
         long now = SystemClock.uptimeMillis();
         if (action == MotionEvent.ACTION_DOWN) {
@@ -212,7 +212,7 @@ public class EventController {
                 return false;
             }
 
-            properties[i].id = i;
+            properties[i].id = ids[i];
             properties[i].toolType = MotionEvent.TOOL_TYPE_FINGER;
 
             coords[i].x = points[i].x;

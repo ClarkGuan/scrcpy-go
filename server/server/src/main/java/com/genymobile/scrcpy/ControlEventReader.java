@@ -137,17 +137,19 @@ public class ControlEventReader {
         buffer.mark();
         int action = buffer.getShort();
         int len = toUnsigned(buffer.get());
-        if (buffer.remaining() < len*4 + 4) {
+        if (buffer.remaining() < len*5 + 4) {
             buffer.reset();
             return null;
         }
         Point[] points = getPoints(len);
+        int[] ids = getIds(len);
         for (int i = 0; i < len; i++) {
             points[i].x = toUnsigned(buffer.getShort());
             points[i].y = toUnsigned(buffer.getShort());
+            ids[i] = toUnsigned(buffer.get());
         }
         Size screenSize = new Size(toUnsigned(buffer.getShort()), toUnsigned(buffer.getShort()));
-        return ControlEvent.createMotionControlEvent(action, points, screenSize);
+        return ControlEvent.createMotionControlEvent(action, points, ids, screenSize);
     }
 
     private ControlEvent parseScrollControlEvent() {
@@ -196,7 +198,7 @@ public class ControlEventReader {
     private final Point[] points7 = new Point[7];
     private final Point[] points8 = new Point[8];
 
-    public Point[] getPoints(int count) {
+    private Point[] getPoints(int count) {
         if (count > 8) {
             final Point[] points = new Point[count];
             for (int i = 0; i < count; i++) {
@@ -234,6 +236,44 @@ public class ControlEventReader {
                 return points8;
         }
 
+        throw new IllegalStateException();
+    }
+
+    private final int[] ids0 = new int[0];
+    private final int[] ids1 = new int[1];
+    private final int[] ids2 = new int[2];
+    private final int[] ids3 = new int[3];
+    private final int[] ids4 = new int[4];
+    private final int[] ids5 = new int[5];
+    private final int[] ids6 = new int[6];
+    private final int[] ids7 = new int[7];
+    private final int[] ids8 = new int[8];
+
+    private int[] getIds(int count) {
+        if (count > 8) {
+            return new int[count];
+        }
+
+        switch (count) {
+            case 0:
+                return ids0;
+            case 1:
+                return ids1;
+            case 2:
+                return ids2;
+            case 3:
+                return ids3;
+            case 4:
+                return ids4;
+            case 5:
+                return ids5;
+            case 6:
+                return ids6;
+            case 7:
+                return ids7;
+            case 8:
+                return ids8;
+        }
         throw new IllegalStateException();
     }
 }

@@ -125,10 +125,18 @@ const (
 	AMOTION_EVENT_ACTION_BUTTON_RELEASE     androidMotionEventAction = 12
 )
 
+type touchPoint struct {
+	point
+	id int
+}
+
+// 多点触摸，每一个点一旦 down，就会生成一个 id，且该 id 在 up 之前不变
 type mouseEventSet struct {
-	points     []point
-	buf        []byte
-	mutex      sync.Mutex
+	points map[int]point
+	buf    []byte
+	mutex  sync.Mutex
+	table  [128]bool
+
 	lastAction androidMotionEventAction
 	lastId     int
 }
@@ -136,19 +144,22 @@ type mouseEventSet struct {
 func (set *mouseEventSet) acquireId() int {
 	set.mutex.Lock()
 	defer set.mutex.Unlock()
-	return len(set.points)
+	for i := range set.table {
+		if !set.table[i] {
+			return i
+		}
+	}
+	panic("out of touch count")
 }
 
 func (set *mouseEventSet) accept(se *singleMouseEvent) {
 	set.mutex.Lock()
 	defer set.mutex.Unlock()
 
-	if se.id < len(set.points) {
-		set.points[se.id] = se.point
-	} else {
-		set.points = append(set.points, se.point)
+	if set.points == nil {
+		set.points = make(map[int]point)
 	}
-
+	set.points[se.id] = se.point
 	if se.action == AMOTION_EVENT_ACTION_DOWN && se.id != 0 {
 		se.action = AMOTION_EVENT_ACTION_POINTER_DOWN | androidMotionEventAction(se.id)<<8
 	} else if se.action == AMOTION_EVENT_ACTION_UP && len(set.points) > 1 {
@@ -179,11 +190,12 @@ func (set *mouseEventSet) Serialize(w io.Writer, s *screen) error {
 	set.buf = append(set.buf, byte(len(set.points)))
 
 	// 写入数组内容
-	for _, p := range set.points {
+	for id, p := range set.points {
 		set.buf = append(set.buf, byte(p.x>>8))
 		set.buf = append(set.buf, byte(p.x))
 		set.buf = append(set.buf, byte(p.y>>8))
 		set.buf = append(set.buf, byte(p.y))
+		set.buf = append(set.buf, byte(id))
 	}
 
 	// 写入 frame size
@@ -195,7 +207,8 @@ func (set *mouseEventSet) Serialize(w io.Writer, s *screen) error {
 	_, err := w.Write(set.buf)
 
 	if set.lastAction == AMOTION_EVENT_ACTION_UP || set.lastAction == AMOTION_EVENT_ACTION_POINTER_UP {
-		set.points = append(set.points[:set.lastId], set.points[set.lastId+1:]...)
+		delete(set.points, set.lastId)
+		set.table[set.lastId] = false
 	}
 
 	return err
@@ -206,7 +219,6 @@ func (set *mouseEventSet) EventType() controlEventType {
 }
 
 type singleMouseEvent struct {
+	touchPoint
 	action androidMotionEventAction
-	point  point
-	id     int
 }

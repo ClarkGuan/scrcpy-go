@@ -114,10 +114,6 @@ func eventLoop(screen *screen, frames *frame, c *controller) error {
 	return nil
 }
 
-func IsRelativeMouseMode() bool {
-	return sdl.GetRelativeMouseMode()
-}
-
 func processMouseMotionEvent(mme *sdl.MouseMotionEvent, c *controller) {
 	if mme.State == 0 {
 		return
@@ -143,5 +139,20 @@ func processMouseButtonEvent(mbe *sdl.MouseButtonEvent, c *controller) {
 }
 
 func processKeyboardEvent(kbe *sdl.KeyboardEvent, c *controller) {
+	ctrl := kbe.Keysym.Mod&(sdl.KMOD_RCTRL|sdl.KMOD_LCTRL) != 0
+	alt := kbe.Keysym.Mod&(sdl.KMOD_RALT|sdl.KMOD_LALT) != 0
+	//meta := kbe.Keysym.Mod & (sdl.KMOD_RGUI | sdl.KMOD_LGUI) != 0  // command on mac
 
+	if alt {
+		return
+	}
+
+	keycode := kbe.Keysym.Sym
+	if ctrl && keycode == sdl.K_x {
+		isMouseRelativeMode := sdl.GetRelativeMouseMode()
+		sdl.SetRelativeMouseMode(!isMouseRelativeMode)
+		if !isMouseRelativeMode {
+
+		}
+	}
 }

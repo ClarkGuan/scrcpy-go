@@ -23,6 +23,7 @@ public final class ControlEvent {
     private int buttons; // MotionEvent.BUTTON_*
     private Size screenSize;
     private Point[] points;
+    private int[] ids;
     private int hScroll;
     private int vScroll;
 
@@ -45,7 +46,7 @@ public final class ControlEvent {
         return event;
     }
 
-    public static ControlEvent createMotionControlEvent(int action, Point[] points, Size screenSize) {
+    public static ControlEvent createMotionControlEvent(int action, Point[] points, int[] ids, Size screenSize) {
         ControlEvent event = new ControlEvent();
         event.type = TYPE_MOUSE;
         event.action = action;
@@ -53,6 +54,7 @@ public final class ControlEvent {
 //        event.position = position;
         event.points = points;
         event.screenSize = screenSize;
+        event.ids = ids;
         return event;
     }
 
@@ -114,5 +116,9 @@ public final class ControlEvent {
 
     public Size getScreenSize() {
         return screenSize;
+    }
+
+    public int[] getIds() {
+        return ids;
     }
 }
