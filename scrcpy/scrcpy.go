@@ -72,6 +72,7 @@ func Main(opt *Option) (err error) {
 		log.Println(err)
 	}
 
+	sdl.Quit()
 	return
 }
 
@@ -97,36 +98,50 @@ func eventLoop(screen *screen, frames *frame, c *controller) error {
 			return nil
 
 		case sdl.MOUSEMOTION:
-			mme := ev.(*sdl.MouseMotionEvent)
-			if mme.State == 0 {
-				continue
-			}
-			sme := singleMouseEvent{}
-			sme.action = AMOTION_EVENT_ACTION_MOVE
-			sme.id = 0
-			sme.point.x = uint16(mme.X)
-			sme.point.y = uint16(mme.Y)
-			c.PushEvent(&sme)
+			processMouseMotionEvent(ev.(*sdl.MouseMotionEvent), c)
 
 		case sdl.MOUSEBUTTONDOWN:
 			fallthrough
 		case sdl.MOUSEBUTTONUP:
-			mbe := ev.(*sdl.MouseButtonEvent)
-			sme := singleMouseEvent{}
-			if ev.GetType() == sdl.MOUSEBUTTONDOWN {
-				sme.action = AMOTION_EVENT_ACTION_DOWN
-			} else {
-				sme.action = AMOTION_EVENT_ACTION_UP
-			}
-			sme.point.x = uint16(mbe.X)
-			sme.point.y = uint16(mbe.Y)
-			c.PushEvent(&sme)
+			processMouseButtonEvent(ev.(*sdl.MouseButtonEvent), c)
 
 		case sdl.KEYDOWN:
 			fallthrough
 		case sdl.KEYUP:
-			//kbe := ev.(*sdl.KeyboardEvent)
+			processKeyboardEvent(ev.(*sdl.KeyboardEvent), c)
 		}
 	}
 	return nil
+}
+
+func IsRelativeMouseMode() bool {
+	return sdl.GetRelativeMouseMode()
+}
+
+func processMouseMotionEvent(mme *sdl.MouseMotionEvent, c *controller) {
+	if mme.State == 0 {
+		return
+	}
+	sme := singleMouseEvent{}
+	sme.action = AMOTION_EVENT_ACTION_MOVE
+	sme.id = 0
+	sme.point.x = uint16(mme.X)
+	sme.point.y = uint16(mme.Y)
+	c.PushEvent(&sme)
+}
+
+func processMouseButtonEvent(mbe *sdl.MouseButtonEvent, c *controller) {
+	sme := singleMouseEvent{}
+	if mbe.Type == sdl.MOUSEBUTTONDOWN {
+		sme.action = AMOTION_EVENT_ACTION_DOWN
+	} else {
+		sme.action = AMOTION_EVENT_ACTION_UP
+	}
+	sme.point.x = uint16(mbe.X)
+	sme.point.y = uint16(mbe.Y)
+	c.PushEvent(&sme)
+}
+
+func processKeyboardEvent(kbe *sdl.KeyboardEvent, c *controller) {
+
 }
