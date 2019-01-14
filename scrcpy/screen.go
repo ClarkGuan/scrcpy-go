@@ -1,0 +1,173 @@
+package scrcpy
+
+import (
+	"log"
+
+	"github.com/veandco/go-sdl2/sdl"
+)
+
+const (
+	displayMargins = 96
+)
+
+func sdlInitAndConfigure() (err error) {
+	if !sdl.SetHint(sdl.HINT_NO_SIGNAL_HANDLERS, "1") {
+		log.Println("Cannot request to keep default signal handlers")
+	}
+
+	if err = sdl.Init(sdl.INIT_VIDEO); err != nil {
+		return
+	}
+
+	if !sdl.SetHint(sdl.HINT_RENDER_SCALE_QUALITY, "2") {
+		log.Println("Could not enable bilinear filtering")
+	}
+
+	if !sdl.SetHint("SDL_MOUSE_FOCUS_CLICKTHROUGH", "1") {
+		log.Println("Could not enable mouse focus clickthrough")
+	}
+
+	return
+}
+
+func maxUint16(a, b uint16) uint16 {
+	if a > b {
+		return a
+	}
+
+	return b
+}
+
+func minUnt32(a, b uint32) uint32 {
+	if a < b {
+		return a
+	}
+
+	return b
+}
+
+func getPreferredDisplayBounds() (bounds size, err error) {
+	if rect, err := sdl.GetDisplayUsableBounds(0); err != nil {
+		return bounds, err
+	} else {
+		bounds.width = maxUint16(0, uint16(rect.W-displayMargins))
+		bounds.height = maxUint16(0, uint16(rect.H-displayMargins))
+		return bounds, nil
+	}
+}
+
+func getOptimalSize(currentSize, frameSize size) size {
+	if frameSize.width == 0 || frameSize.height == 0 {
+		// avoid division by 0
+		return currentSize
+	}
+
+	var w, h uint32
+
+	if displaySize, err := getPreferredDisplayBounds(); err == nil {
+		w = minUnt32(uint32(currentSize.width), uint32(displaySize.width))
+		h = minUnt32(uint32(currentSize.height), uint32(displaySize.height))
+	} else {
+		w = uint32(currentSize.width)
+		h = uint32(currentSize.height)
+	}
+
+	if uint32(frameSize.width)*h > uint32(frameSize.height)*w {
+		h = uint32(frameSize.height) * w / uint32(frameSize.width)
+	} else {
+		w = uint32(frameSize.width) * h / uint32(frameSize.height)
+	}
+
+	return size{width: uint16(w), height: uint16(h)}
+}
+
+func getInitialOptimalSize(frameSize size) size {
+	return getOptimalSize(frameSize, frameSize)
+}
+
+type screen struct {
+	window    *sdl.Window
+	renderer  *sdl.Renderer
+	texture   *sdl.Texture
+	frameSize size
+	hasFrame  bool
+}
+
+func (s *screen) InitRendering(deviceName string, frameSize size) (err error) {
+	s.frameSize = frameSize
+	windowSize := getInitialOptimalSize(frameSize)
+	windowFlags := sdl.WINDOW_HIDDEN // SDL_WINDOW_RESIZABLE
+	windowFlags |= sdl.WINDOW_ALLOW_HIGHDPI
+	if s.window, err = sdl.CreateWindow(deviceName, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED, int32(windowSize.width), int32(windowSize.height), uint32(windowFlags)); err != nil {
+		return
+	}
+	if s.renderer, err = sdl.CreateRenderer(s.window, -1, sdl.RENDERER_ACCELERATED); err != nil {
+		s.Close()
+		return
+	}
+	if err = s.renderer.SetLogicalSize(int32(frameSize.width), int32(frameSize.height)); err != nil {
+		s.Close()
+		return
+	}
+	if debugOpt {
+		log.Printf("Initial texture: %d, %d", frameSize.width, frameSize.height)
+	}
+	if s.texture, err = s.renderer.CreateTexture(sdl.PIXELFORMAT_YV12, sdl.TEXTUREACCESS_STREAMING, int32(frameSize.width), int32(frameSize.height)); err != nil {
+		s.Close()
+		return
+	}
+	return
+}
+
+func (s *screen) Close() error {
+	if s.texture != nil {
+		s.texture.Destroy()
+		s.texture = nil
+	}
+	if s.renderer != nil {
+		s.renderer.Destroy()
+		s.renderer = nil
+	}
+	if s.window != nil {
+		s.window.Destroy()
+		s.window = nil
+	}
+	return nil
+}
+
+func (s *screen) showWindow() {
+	s.window.Show()
+}
+
+func (s *screen) prepareForFrame(newFrameSize size) (err error) {
+	if s.frameSize.width != newFrameSize.width || s.frameSize.height != newFrameSize.height {
+		if err = s.renderer.SetLogicalSize(int32(newFrameSize.width), int32(newFrameSize.height)); err != nil {
+			log.Printf("Could not set renderer logical size: %v\n", err)
+			return
+		}
+
+		s.texture.Destroy()
+		w, h := s.window.GetSize()
+		currentSize := size{width: uint16(w), height: uint16(h)}
+		targetSize := size{width: uint16(uint32(currentSize.width) * uint32(newFrameSize.width) / uint32(s.frameSize.width)),
+			height: uint16(uint32(currentSize.height) * uint32(newFrameSize.height) / uint32(s.frameSize.height))}
+		targetSize = getOptimalSize(targetSize, newFrameSize)
+		s.window.SetSize(int32(targetSize.width), int32(targetSize.height))
+		s.frameSize = newFrameSize
+		if debugOpt {
+			log.Printf("New texture: %d, %d\n", newFrameSize.width, newFrameSize.height)
+		}
+		if s.texture, err = s.renderer.CreateTexture(sdl.PIXELFORMAT_YV12, sdl.TEXTUREACCESS_STREAMING, int32(newFrameSize.width), int32(newFrameSize.height)); err != nil {
+			log.Printf("Could not create texture: %v\n", err)
+			return
+		}
+	}
+
+	return
+}
+
+func (s *screen) render() {
+	s.renderer.Clear()
+	s.renderer.Copy(s.texture, nil, nil)
+	s.renderer.Present()
+}
