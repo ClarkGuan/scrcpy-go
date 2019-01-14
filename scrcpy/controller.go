@@ -20,6 +20,7 @@ type controller struct {
 	stopped   int32
 
 	mouseEvents mouseEventSet
+	mainTouchId int
 }
 
 func newController(screen *screen, sock net.Conn) *controller {
@@ -78,12 +79,31 @@ func (c *controller) PushEvent(ev interface{}) error {
 			defer atomic.StoreInt32(&c.stopped, 0)
 			select {
 			case c.ch <- ev:
+				// 此时就可以将此 id 看做回收了
+				if sme, ok := ev.(*singleMouseEvent); ok && sme.action == AMOTION_EVENT_ACTION_UP {
+					c.mouseEvents.table[sme.id] = false
+				}
 				return nil
 			default:
 				return errFullQueue
 			}
 		}
 	}
+}
+
+func (c *controller) ReleaseAllTouch() error {
+	c.mouseEvents.Lock()
+	defer c.mouseEvents.Unlock()
+
+	for id, p := range c.mouseEvents.points {
+		event := singleMouseEvent{action: AMOTION_EVENT_ACTION_UP}
+		event.point = p
+		event.id = id
+		if err := c.PushEvent(&event); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (c *controller) Stop() error {
@@ -132,18 +152,17 @@ type touchPoint struct {
 
 // 多点触摸，每一个点一旦 down，就会生成一个 id，且该 id 在 up 之前不变
 type mouseEventSet struct {
+	sync.Mutex
 	points map[int]point
 	buf    []byte
-	mutex  sync.Mutex
-	table  [128]bool
+	action androidMotionEventAction
+	id     int
 
-	lastAction androidMotionEventAction
-	lastId     int
+	// SDL 事件循环线程访问
+	table [128]bool
 }
 
 func (set *mouseEventSet) acquireId() int {
-	set.mutex.Lock()
-	defer set.mutex.Unlock()
 	for i := range set.table {
 		if !set.table[i] {
 			return i
@@ -153,26 +172,23 @@ func (set *mouseEventSet) acquireId() int {
 }
 
 func (set *mouseEventSet) accept(se *singleMouseEvent) {
-	set.mutex.Lock()
-	defer set.mutex.Unlock()
-
+	set.Lock()
 	if set.points == nil {
 		set.points = make(map[int]point)
 	}
 	set.points[se.id] = se.point
+	set.Unlock()
+
 	if se.action == AMOTION_EVENT_ACTION_DOWN && se.id != 0 {
 		se.action = AMOTION_EVENT_ACTION_POINTER_DOWN | androidMotionEventAction(se.id)<<8
 	} else if se.action == AMOTION_EVENT_ACTION_UP && len(set.points) > 1 {
 		se.action = AMOTION_EVENT_ACTION_POINTER_UP | androidMotionEventAction(1<<8)
 	}
-	set.lastAction = se.action
-	set.lastId = se.id
+	set.action = se.action
+	set.id = se.id
 }
 
 func (set *mouseEventSet) Serialize(w io.Writer, s *screen) error {
-	set.mutex.Lock()
-	defer set.mutex.Unlock()
-
 	if set.buf == nil {
 		set.buf = make([]byte, 0, 128)
 	} else {
@@ -183,9 +199,11 @@ func (set *mouseEventSet) Serialize(w io.Writer, s *screen) error {
 	set.buf = append(set.buf, byte(set.EventType()))
 
 	// 写入 action
-	set.buf = append(set.buf, byte(set.lastAction>>8))
-	set.buf = append(set.buf, byte(set.lastAction))
+	set.buf = append(set.buf, byte(set.action>>8))
+	set.buf = append(set.buf, byte(set.action))
 
+	set.Lock()
+	defer set.Unlock()
 	// 写入数组长度 1 个字节
 	set.buf = append(set.buf, byte(len(set.points)))
 
@@ -206,9 +224,8 @@ func (set *mouseEventSet) Serialize(w io.Writer, s *screen) error {
 
 	_, err := w.Write(set.buf)
 
-	if set.lastAction == AMOTION_EVENT_ACTION_UP || set.lastAction == AMOTION_EVENT_ACTION_POINTER_UP {
-		delete(set.points, set.lastId)
-		set.table[set.lastId] = false
+	if set.action == AMOTION_EVENT_ACTION_UP || set.action == AMOTION_EVENT_ACTION_POINTER_UP {
+		delete(set.points, set.id)
 	}
 
 	return err

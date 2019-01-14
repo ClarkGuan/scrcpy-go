@@ -115,27 +115,34 @@ func eventLoop(screen *screen, frames *frame, c *controller) error {
 }
 
 func processMouseMotionEvent(mme *sdl.MouseMotionEvent, c *controller) {
-	if mme.State == 0 {
+	if !sdl.GetRelativeMouseMode() && mme.State == 0 {
 		return
 	}
+
 	sme := singleMouseEvent{}
 	sme.action = AMOTION_EVENT_ACTION_MOVE
-	sme.id = 0
+	sme.id = c.mainTouchId
 	sme.point.x = uint16(mme.X)
 	sme.point.y = uint16(mme.Y)
 	c.PushEvent(&sme)
 }
 
 func processMouseButtonEvent(mbe *sdl.MouseButtonEvent, c *controller) {
-	sme := singleMouseEvent{}
-	if mbe.Type == sdl.MOUSEBUTTONDOWN {
-		sme.action = AMOTION_EVENT_ACTION_DOWN
+	if sdl.GetRelativeMouseMode() {
+		// TODO 射击
 	} else {
-		sme.action = AMOTION_EVENT_ACTION_UP
+		sme := singleMouseEvent{}
+		if mbe.Type == sdl.MOUSEBUTTONDOWN {
+			sme.action = AMOTION_EVENT_ACTION_DOWN
+			c.mainTouchId = c.mouseEvents.acquireId()
+		} else {
+			sme.action = AMOTION_EVENT_ACTION_UP
+		}
+		sme.id = c.mainTouchId
+		sme.point.x = uint16(mbe.X)
+		sme.point.y = uint16(mbe.Y)
+		c.PushEvent(&sme)
 	}
-	sme.point.x = uint16(mbe.X)
-	sme.point.y = uint16(mbe.Y)
-	c.PushEvent(&sme)
 }
 
 func processKeyboardEvent(kbe *sdl.KeyboardEvent, c *controller) {
@@ -148,11 +155,26 @@ func processKeyboardEvent(kbe *sdl.KeyboardEvent, c *controller) {
 	}
 
 	keycode := kbe.Keysym.Sym
-	if ctrl && keycode == sdl.K_x {
+	if ctrl && keycode == sdl.K_x && kbe.Type == sdl.KEYUP {
 		isMouseRelativeMode := sdl.GetRelativeMouseMode()
 		sdl.SetRelativeMouseMode(!isMouseRelativeMode)
-		if !isMouseRelativeMode {
+		c.ReleaseAllTouch()
 
+		if !isMouseRelativeMode {
+			if debugOpt {
+				log.Println("切换鼠标模式为射击模式")
+			}
+
+			c.mainTouchId = c.mouseEvents.acquireId()
+			event := singleMouseEvent{action: AMOTION_EVENT_ACTION_DOWN}
+			event.x = c.screen.frameSize.width >> 1
+			event.y = c.screen.frameSize.height >> 1
+			event.id = c.mainTouchId
+			c.PushEvent(&event)
+		} else {
+			if debugOpt {
+				log.Println("切换鼠标模式为一般模式")
+			}
 		}
 	}
 }
