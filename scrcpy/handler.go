@@ -60,11 +60,7 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 
 	} else {
 		sme := singleMouseEvent{}
-		if event.Type == sdl.MOUSEBUTTONDOWN {
-			sme.action = AMOTION_EVENT_ACTION_DOWN
-		} else {
-			sme.action = AMOTION_EVENT_ACTION_UP
-		}
+		sme.action = AMOTION_EVENT_ACTION_DOWN
 		sme.id = 0
 		sme.point.x = uint16(event.X)
 		sme.point.y = uint16(event.Y)
@@ -74,6 +70,16 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 }
 
 func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool, error) {
+	if sdl.GetRelativeMouseMode() {
+
+	} else {
+		sme := singleMouseEvent{}
+		sme.action = AMOTION_EVENT_ACTION_UP
+		sme.id = 0
+		sme.point.x = uint16(event.X)
+		sme.point.y = uint16(event.Y)
+		return true, ch.controller.PushEvent(&sme)
+	}
 	return false, nil
 }
 

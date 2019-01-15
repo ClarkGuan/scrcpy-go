@@ -31,13 +31,13 @@ type Controller interface {
 	Start()
 	Stop() error
 	PushEvent(interface{}) error
-	Register(ControlHandler)
-	Remove(ControlHandler)
+	Register(ControlEventHandler)
+	Remove(ControlEventHandler)
 	Writer() io.Writer
 	Data() []interface{}
 }
 
-type ControlHandler interface {
+type ControlEventHandler interface {
 	HandleControlEvent(Controller, interface{}) interface{}
 }
 
@@ -47,7 +47,7 @@ type controllerImpl struct {
 	ch      chan interface{}
 	stopped int32
 
-	handlers     []ControlHandler
+	handlers     []ControlEventHandler
 	handlerMutex sync.Mutex
 }
 
@@ -64,7 +64,7 @@ func (c *controllerImpl) Stop() error {
 	return c.PushEvent(nil)
 }
 
-func (c *controllerImpl) Register(handler ControlHandler) {
+func (c *controllerImpl) Register(handler ControlEventHandler) {
 	c.handlerMutex.Lock()
 	defer c.handlerMutex.Unlock()
 
@@ -76,7 +76,7 @@ func (c *controllerImpl) Register(handler ControlHandler) {
 	c.handlers = append(c.handlers, handler)
 }
 
-func (c *controllerImpl) Remove(handler ControlHandler) {
+func (c *controllerImpl) Remove(handler ControlEventHandler) {
 	c.handlerMutex.Lock()
 	defer c.handlerMutex.Unlock()
 

@@ -69,7 +69,7 @@ func (set *mouseEventSet) accept(se *singleMouseEvent) {
 	set.id = se.id
 }
 
-func (set *mouseEventSet) Serialize(w io.Writer, s *screen) error {
+func (set *mouseEventSet) Serialize(w io.Writer, data ...interface{}) error {
 	if set.buf == nil {
 		set.buf = make([]byte, 0, 128)
 	} else {
@@ -98,6 +98,7 @@ func (set *mouseEventSet) Serialize(w io.Writer, s *screen) error {
 	}
 
 	// 写入 frame size
+	s := data[0].(*screen)
 	set.buf = append(set.buf, byte(s.frameSize.width>>8))
 	set.buf = append(set.buf, byte(s.frameSize.width))
 	set.buf = append(set.buf, byte(s.frameSize.height>>8))
