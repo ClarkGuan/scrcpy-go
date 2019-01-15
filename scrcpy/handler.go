@@ -7,6 +7,12 @@ type controlHandler struct {
 	set        mouseEventSet
 }
 
+func newControlHandler(controller Controller) *controlHandler {
+	ch := controlHandler{controller: controller}
+	controller.Register(&ch)
+	return &ch
+}
+
 func (ch *controlHandler) HandleControlEvent(c Controller, ent interface{}) interface{} {
 	if sme, ok := ent.(*singleMouseEvent); ok {
 		ch.set.accept(sme)

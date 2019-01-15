@@ -73,7 +73,7 @@ func Main(opt *Option) (err error) {
 	fh := &frameHandler{screen: &screen, frames: &frames}
 	looper.Register(fh)
 
-	ch := &controlHandler{controller: controller}
+	ch := newControlHandler(controller)
 	looper.Register(ch)
 
 	if err = looper.Loop(); err != nil {
