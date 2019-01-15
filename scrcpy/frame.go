@@ -13,6 +13,7 @@ import "C"
 import (
 	"errors"
 	"io"
+	"log"
 	"net"
 	"reflect"
 	"runtime"
@@ -194,4 +195,28 @@ func (s *screen) updateTexture(frame avFrame) error {
 		frame.data(0), frame.lineSize(0),
 		frame.data(1), frame.lineSize(1),
 		frame.data(2), frame.lineSize(2))
+}
+
+type frameHandler struct {
+	screen *screen
+	frames *frame
+}
+
+func (fh *frameHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
+	switch event.GetType() {
+	case eventNewFrame:
+		if !fh.screen.hasFrame {
+			fh.screen.hasFrame = true
+			fh.screen.showWindow()
+		}
+		if err := fh.screen.updateFrame(fh.frames); err != nil {
+			return true, err
+		}
+
+	case eventDecoderStopped:
+		log.Println("Video decoder stopped")
+		return true, nil
+	}
+
+	return false, nil
 }
