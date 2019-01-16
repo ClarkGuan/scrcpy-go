@@ -2,7 +2,6 @@ package scrcpy
 
 import (
 	"io"
-	"sync"
 )
 
 type androidMotionEventAction uint16
@@ -26,44 +25,40 @@ const (
 )
 
 type touchPoint struct {
-	point
+	Point
 	id int
 }
 
 // 多点触摸，每一个点一旦 down，就会生成一个 id，且该 id 在 up 之前不变
 type mouseEventSet struct {
-	sync.Mutex
-	points map[int]point
+	points []touchPoint
 	buf    []byte
+
 	action androidMotionEventAction
 	id     int
-
-	// SDL 事件循环线程访问
-	table [128]bool
-}
-
-func (set *mouseEventSet) acquireId() int {
-	for i := range set.table {
-		if !set.table[i] {
-			set.table[i] = true
-			return i
-		}
-	}
-	panic("out of touch count")
 }
 
 func (set *mouseEventSet) accept(se *singleMouseEvent) {
-	set.Lock()
-	if set.points == nil {
-		set.points = make(map[int]point)
+	index := -1
+	if se.action == AMOTION_EVENT_ACTION_DOWN {
+		set.points = append(set.points, touchPoint{Point: se.Point, id: se.id})
+		index = len(set.points) - 1
+	} else {
+		for i := range set.points {
+			if set.points[i].id == se.id {
+				set.points[i].Point = se.Point
+				index = i
+			}
+		}
+		if index == -1 {
+			panic("pointer not found")
+		}
 	}
-	set.points[se.id] = se.point
-	set.Unlock()
 
-	if se.action == AMOTION_EVENT_ACTION_DOWN && se.id != 0 {
-		se.action = AMOTION_EVENT_ACTION_POINTER_DOWN | androidMotionEventAction(se.id)<<8
+	if se.action == AMOTION_EVENT_ACTION_DOWN && index > 0 {
+		se.action = AMOTION_EVENT_ACTION_POINTER_DOWN | androidMotionEventAction(index)<<8
 	} else if se.action == AMOTION_EVENT_ACTION_UP && len(set.points) > 1 {
-		se.action = AMOTION_EVENT_ACTION_POINTER_UP | androidMotionEventAction(1<<8)
+		se.action = AMOTION_EVENT_ACTION_POINTER_UP | androidMotionEventAction(index)<<8
 	}
 	set.action = se.action
 	set.id = se.id
@@ -83,17 +78,15 @@ func (set *mouseEventSet) Serialize(w io.Writer, data ...interface{}) error {
 	set.buf = append(set.buf, byte(set.action>>8))
 	set.buf = append(set.buf, byte(set.action))
 
-	set.Lock()
-	defer set.Unlock()
 	// 写入数组长度 1 个字节
 	set.buf = append(set.buf, byte(len(set.points)))
 
 	// 写入数组内容
 	for id, p := range set.points {
-		set.buf = append(set.buf, byte(p.x>>8))
-		set.buf = append(set.buf, byte(p.x))
-		set.buf = append(set.buf, byte(p.y>>8))
-		set.buf = append(set.buf, byte(p.y))
+		set.buf = append(set.buf, byte(p.X>>8))
+		set.buf = append(set.buf, byte(p.X))
+		set.buf = append(set.buf, byte(p.Y>>8))
+		set.buf = append(set.buf, byte(p.Y))
 		set.buf = append(set.buf, byte(id))
 	}
 
@@ -106,8 +99,11 @@ func (set *mouseEventSet) Serialize(w io.Writer, data ...interface{}) error {
 
 	_, err := w.Write(set.buf)
 
-	if set.action == AMOTION_EVENT_ACTION_UP || set.action == AMOTION_EVENT_ACTION_POINTER_UP {
-		delete(set.points, set.id)
+	if set.action == AMOTION_EVENT_ACTION_UP {
+		set.points = set.points[:0]
+	} else if (set.action & 0x00ff) == AMOTION_EVENT_ACTION_POINTER_UP {
+		index := (set.action & 0xff00) >> 8
+		set.points = append(set.points[:index], set.points[index+1:]...)
 	}
 
 	return err
@@ -120,4 +116,22 @@ func (set *mouseEventSet) EventType() controlEventType {
 type singleMouseEvent struct {
 	touchPoint
 	action androidMotionEventAction
+}
+
+type fingerState [8]bool
+
+var fingers fingerState
+
+func (f *fingerState) GetId() *int {
+	for i := range f[:] {
+		if !f[i] {
+			f[i] = true
+			return &i
+		}
+	}
+	panic("finger number over 8")
+}
+
+func (f *fingerState) Recycle(i *int) {
+	f[*i] = false
 }

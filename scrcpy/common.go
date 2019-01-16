@@ -15,26 +15,26 @@ func (s size) String() string {
 	return fmt.Sprintf("size: (%d, %d)", s.width, s.height)
 }
 
-type point struct {
-	x uint16
-	y uint16
+type Point struct {
+	X uint16
+	Y uint16
 }
 
-func (p point) String() string {
-	return fmt.Sprintf("point: (%d, %d)", p.x, p.y)
+func (p Point) String() string {
+	return fmt.Sprintf("Point: (%d, %d)", p.X, p.Y)
 }
 
 type position struct {
 	screenSize size
-	point      point
+	point      Point
 }
 
 //func (p position) Serialize(w io.Writer) error {
 //	buf := make([]byte, 8)
 //	ret := buf
-//	binary.BigEndian.PutUint16(buf, p.point.x)
+//	binary.BigEndian.PutUint16(buf, p.Point.X)
 //	buf = buf[2:]
-//	binary.BigEndian.PutUint16(buf, p.point.y)
+//	binary.BigEndian.PutUint16(buf, p.Point.Y)
 //	buf = buf[2:]
 //	binary.BigEndian.PutUint16(buf, p.screenSize.width)
 //	buf = buf[2:]

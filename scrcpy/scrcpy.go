@@ -14,6 +14,7 @@ type Option struct {
 	MaxSize int
 	BitRate int
 	Debug   bool
+	KeyMap  map[int]*Point
 }
 
 func Main(opt *Option) (err error) {
@@ -73,7 +74,7 @@ func Main(opt *Option) (err error) {
 	fh := &frameHandler{screen: &screen, frames: &frames}
 	looper.Register(fh)
 
-	ch := newControlHandler(controller)
+	ch := newControlHandler(controller, opt.KeyMap)
 	looper.Register(ch)
 
 	if err = looper.Loop(); err != nil {
