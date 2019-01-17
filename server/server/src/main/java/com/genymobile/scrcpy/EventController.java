@@ -195,7 +195,7 @@ public class EventController {
     }
 
     private boolean injectMouse(int action, Point[] points, int[] ids, Size frameSize) {
-        Ln.i(String.format("action: %d, points: %s, size: %s", action, Arrays.toString(points), frameSize));
+//        Ln.i(String.format("action: %d, points: %s, size: %s", action, Arrays.toString(points), frameSize));
         long now = SystemClock.uptimeMillis();
         if (action == MotionEvent.ACTION_DOWN) {
             lastMouseDown = now;

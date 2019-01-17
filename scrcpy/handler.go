@@ -65,14 +65,6 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 	return false, nil
 }
 
-func transformPoint(x, y, w, h int32) Point {
-	x >>= 2
-	x += w >> 1
-	y >>= 2
-	y += h >> 2
-	return Point{uint16(x), uint16(y)}
-}
-
 func (ch *controlHandler) outside(p *Point) bool {
 	if deltaX := int(p.X) - int(ch.keyMap[VisionKeyCode].X); deltaX > cacheRectLen || deltaX <= -cacheRectLen {
 		return true
