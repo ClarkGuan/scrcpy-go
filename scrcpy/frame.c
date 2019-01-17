@@ -1,4 +1,6 @@
 #include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavcodec/videotoolbox.h>
 #include <libavutil/avutil.h>
 #include <stdio.h>
 
@@ -13,6 +15,22 @@ static int read_packet(void *opaque, uint8_t *buf, int buf_size) {
     return goReadPacket(opaque, (void *) buf, buf_size);
 }
 
+static enum AVPixelFormat scrcpy_get_format(struct AVCodecContext *s, const enum AVPixelFormat * fmt) {
+    while (*fmt != AV_PIX_FMT_NONE) {
+        if (*fmt == AV_PIX_FMT_VIDEOTOOLBOX) {
+            if (s->hwaccel_context == NULL) {
+                int result = av_videotoolbox_default_init(s);
+                if (result < 0) {
+                    return s->pix_fmt;
+                }
+            }
+            return *fmt;
+        }
+        ++fmt;
+    }
+    return s->pix_fmt;
+}
+
 int run_decoder() {
     AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H264);
     if (!codec) {
@@ -25,6 +43,8 @@ int run_decoder() {
         fprintf(stderr, "Could not allocate decoder context\n");
         goto run_end;
     }
+
+//    codec_ctx->get_format = scrcpy_get_format;
 
     if (avcodec_open2(codec_ctx, codec, NULL) < 0) {
         fprintf(stderr, "Could not open H.264 codec\n");
