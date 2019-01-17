@@ -4,6 +4,12 @@ import (
 	"io"
 )
 
+// touch pointer 规则：
+// 1、id 在 touch 过程中不变
+// 2、index 在 touch 过程中可能会改变，因为可能数组中间某个 pointer 先松手
+// 3、id 小的一定排前面，id 大的排后面
+// 4、中途松开的 id 在按下时可以复用之前的 id
+
 type androidMotionEventAction uint16
 
 const (
@@ -38,11 +44,35 @@ type mouseEventSet struct {
 	id     int
 }
 
+func swapPoint(a, b *touchPoint) {
+	tmp := a.X
+	a.X = b.X
+	b.X = tmp
+	tmp = a.Y
+	a.Y = b.Y
+	b.Y = tmp
+	id := a.id
+	a.id = b.id
+	b.id = id
+}
+
 func (set *mouseEventSet) accept(se *singleMouseEvent) {
 	index := -1
 	if se.action == AMOTION_EVENT_ACTION_DOWN {
+		for i := range set.points {
+			if set.points[i].id > se.id {
+				index = i
+				break
+			}
+		}
 		set.points = append(set.points, touchPoint{Point: se.Point, id: se.id})
-		index = len(set.points) - 1
+		if index == -1 {
+			index = len(set.points) - 1
+		} else {
+			for i := len(set.points) - 2; i >= index; i-- {
+				swapPoint(&set.points[i], &set.points[i+1])
+			}
+		}
 	} else {
 		for i := range set.points {
 			if set.points[i].id == se.id {
@@ -55,7 +85,7 @@ func (set *mouseEventSet) accept(se *singleMouseEvent) {
 		}
 	}
 
-	if se.action == AMOTION_EVENT_ACTION_DOWN && index > 0 {
+	if se.action == AMOTION_EVENT_ACTION_DOWN && len(set.points) > 1 {
 		se.action = AMOTION_EVENT_ACTION_POINTER_DOWN | androidMotionEventAction(index)<<8
 	} else if se.action == AMOTION_EVENT_ACTION_UP && len(set.points) > 1 {
 		se.action = AMOTION_EVENT_ACTION_POINTER_UP | androidMotionEventAction(index)<<8

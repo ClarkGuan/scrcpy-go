@@ -2,6 +2,7 @@ package scrcpy
 
 import (
 	"github.com/veandco/go-sdl2/sdl"
+	"log"
 )
 
 const (
@@ -75,15 +76,15 @@ func (ch *controlHandler) outside(p *Point) bool {
 	}
 }
 
-func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
+func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int, state uint32) (bool, error) {
 	if ch.keyState[VisionKeyCode] == nil {
 		ch.keyState[VisionKeyCode] = fingers.GetId()
 		ch.cachePointer = *ch.keyMap[VisionKeyCode]
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.cachePointer)
 	} else {
 		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + event.XRel)
-		ch.cachePointer.Y = uint16(int32(ch.cachePointer.Y) + event.YRel)
-		if ch.outside(&ch.cachePointer) {
+		ch.cachePointer.Y = uint16(int32(ch.cachePointer.Y) + event.YRel + int32(delta))
+		if state == 0 && ch.outside(&ch.cachePointer) {
 			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
 			ch.keyState[VisionKeyCode] = nil
@@ -91,19 +92,24 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 		} else {
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
 		}
+
+		//b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
+		//if ch.outside(&ch.cachePointer) {
+		//	ch.cachePointer = *ch.keyMap[VisionKeyCode]
+		//}
+		//return b, e
 	}
 }
 
 func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, error) {
 	if sdl.GetRelativeMouseMode() {
 		if event.State == 0 {
-			return ch.visionMoving(event, 0)
+			return ch.visionMoving(event, 0, event.State)
 		} else {
 			if ch.keyState[mainPointerKeyCode] != nil {
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
 			} else if ch.keyState[FireKeyCode] != nil {
-				// TODO 移动视角并处理压枪
-				ch.visionMoving(event, 0)
+				ch.visionMoving(event, 0, 0)
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 			} else {
 				panic("fire pointer state error")
@@ -111,9 +117,10 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 		}
 	} else {
 		if ch.keyState[VisionKeyCode] != nil {
-			ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
+			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
 			ch.keyState[VisionKeyCode] = nil
+			return b, e
 		}
 
 		if event.State == 0 {
@@ -134,6 +141,9 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 	if sdl.GetRelativeMouseMode() {
 		if ch.keyState[FireKeyCode] == nil {
 			ch.keyState[FireKeyCode] = fingers.GetId()
+			if debugOpt {
+				log.Println("按下开火键")
+			}
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 		} else {
 			panic("fire pointer state error")
@@ -160,6 +170,9 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 			fingers.Recycle(ch.keyState[FireKeyCode])
 			ch.keyState[FireKeyCode] = nil
+			if debugOpt {
+				log.Println("松开开火键")
+			}
 			return b, e
 		} else {
 			panic("fire pointer state error")
@@ -223,5 +236,8 @@ func (ch *controlHandler) sendMouseEvent(action androidMotionEventAction, id int
 	sme := singleMouseEvent{action: action}
 	sme.id = id
 	sme.Point = p
+	if debugOpt {
+		log.Printf("action: %d id: %d %s", action, id, p)
+	}
 	return true, ch.controller.PushEvent(&sme)
 }
