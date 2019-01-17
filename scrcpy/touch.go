@@ -59,20 +59,16 @@ func swapPoint(a, b *touchPoint) {
 func (set *mouseEventSet) accept(se *singleMouseEvent) {
 	index := -1
 	if se.action == AMOTION_EVENT_ACTION_DOWN {
-		for i := range set.points {
-			if set.points[i].id > se.id {
-				index = i
+		set.points = append(set.points, touchPoint{Point: se.Point, id: se.id})
+		var i int
+		for i = len(set.points) - 1; i >= 1; i-- {
+			if set.points[i].id < set.points[i-1].id {
+				swapPoint(&set.points[i], &set.points[i-1])
+			} else {
 				break
 			}
 		}
-		set.points = append(set.points, touchPoint{Point: se.Point, id: se.id})
-		if index == -1 {
-			index = len(set.points) - 1
-		} else {
-			for i := len(set.points) - 2; i >= index; i-- {
-				swapPoint(&set.points[i], &set.points[i+1])
-			}
-		}
+		index = i
 	} else {
 		for i := range set.points {
 			if set.points[i].id == se.id {
@@ -80,9 +76,9 @@ func (set *mouseEventSet) accept(se *singleMouseEvent) {
 				index = i
 			}
 		}
-		if index == -1 {
-			panic("pointer not found")
-		}
+	}
+	if index == -1 {
+		panic("pointer not found")
 	}
 
 	if se.action == AMOTION_EVENT_ACTION_DOWN && len(set.points) > 1 {
