@@ -8,7 +8,7 @@ import (
 // 1、id 在 touch 过程中不变
 // 2、index 在 touch 过程中可能会改变，因为可能数组中间某个 pointer 先松手
 // 3、id 小的一定排前面，id 大的排后面
-// 4、中途松开的 id 在按下时可以复用之前的 id
+// 4、中途松开的 id 再次按下时可以复用之前的 id
 
 type androidMotionEventAction uint16
 

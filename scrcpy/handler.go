@@ -9,10 +9,10 @@ const (
 	mainPointerKeyCode = 500 + iota
 	FireKeyCode
 	VisionKeyCode
-	//FrontKeyCode
-	//BackKeyCode
-	//LeftKeyCode
-	//RightKeyCode
+	FrontKeyCode
+	BackKeyCode
+	LeftKeyCode
+	RightKeyCode
 )
 
 const cacheRectLen = 300
@@ -26,6 +26,8 @@ type controlHandler struct {
 	keyMap   map[int]*Point
 
 	cachePointer Point
+
+	directionController directionController
 }
 
 func newControlHandler(controller Controller, screen *screen, keyMap map[int]*Point) *controlHandler {
@@ -34,6 +36,7 @@ func newControlHandler(controller Controller, screen *screen, keyMap map[int]*Po
 	ch.keyState = make(map[int]*int)
 	ch.keyMap = keyMap
 	ch.screen = screen
+	ch.directionController.keyMap = keyMap
 	return &ch
 }
 
@@ -92,12 +95,6 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int, s
 		} else {
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
 		}
-
-		//b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
-		//if ch.outside(&ch.cachePointer) {
-		//	ch.cachePointer = *ch.keyMap[VisionKeyCode]
-		//}
-		//return b, e
 	}
 }
 
@@ -205,6 +202,24 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 			} else {
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[keyCode], *poi)
 			}
+		} else {
+			switch event.Keysym.Sym {
+			case sdl.K_w:
+				ch.directionController.frontDown()
+				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+
+			case sdl.K_s:
+				ch.directionController.backDown()
+				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+
+			case sdl.K_a:
+				ch.directionController.leftDown()
+				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+
+			case sdl.K_d:
+				ch.directionController.rightDown()
+				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+			}
 		}
 	}
 	return true, nil
@@ -227,6 +242,24 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			fingers.Recycle(ch.keyState[keyCode])
 			ch.keyState[keyCode] = nil
 			return b, e
+		} else {
+			switch event.Keysym.Sym {
+			case sdl.K_w:
+				ch.directionController.frontUp()
+				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+
+			case sdl.K_s:
+				ch.directionController.backUp()
+				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+
+			case sdl.K_a:
+				ch.directionController.leftUp()
+				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+
+			case sdl.K_d:
+				ch.directionController.rightUp()
+				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+			}
 		}
 	}
 	return true, nil
