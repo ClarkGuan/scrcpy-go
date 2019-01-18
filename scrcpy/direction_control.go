@@ -1,8 +1,8 @@
 package scrcpy
 
-type Direction int
+import "log"
 
-const maxDirectionLen = 50
+type Direction int
 
 const (
 	frontDirection Direction = 1 << iota
@@ -11,17 +11,19 @@ const (
 	rightDirection
 )
 
+const deltaDirectionMovement = 150
+
 type directionController struct {
-	direction  Direction
-	cachePoint Point
-	keyMap     map[int]*Point
-	id         *int
+	direction   Direction
+	cachePoint  Point
+	middlePoint *Point
+	radius      uint16
+	keyMap      map[int]*Point
+	id          *int
 }
 
 func (dc *directionController) frontDown() {
-	if !dc.isBackDown() {
-		dc.direction |= frontDirection
-	}
+	dc.direction |= frontDirection
 }
 
 func (dc *directionController) frontUp() {
@@ -33,9 +35,7 @@ func (dc *directionController) isFrontDown() bool {
 }
 
 func (dc *directionController) backDown() {
-	if !dc.isFrontDown() {
-		dc.direction |= backDirection
-	}
+	dc.direction |= backDirection
 }
 
 func (dc *directionController) backUp() {
@@ -47,9 +47,7 @@ func (dc *directionController) isBackDown() bool {
 }
 
 func (dc *directionController) leftDown() {
-	if !dc.isRightDown() {
-		dc.direction |= leftDirection
-	}
+	dc.direction |= leftDirection
 }
 
 func (dc *directionController) leftUp() {
@@ -61,9 +59,7 @@ func (dc *directionController) isLeftDown() bool {
 }
 
 func (dc *directionController) rightDown() {
-	if !dc.isLeftDown() {
-		dc.direction |= rightDirection
-	}
+	dc.direction |= rightDirection
 }
 
 func (dc *directionController) rightUp() {
@@ -78,43 +74,77 @@ func (dc *directionController) allUp() bool {
 	return dc.direction == 0
 }
 
-func (dc *directionController) getPoint(repeat bool) *Point {
-	if dc.isFrontDown() {
-		dc.cachePoint = *dc.keyMap[FrontKeyCode]
-		if repeat {
-			dc.cachePoint.Y -= maxDirectionLen
-		}
-		if dc.isLeftDown() {
-			dc.cachePoint.X = dc.keyMap[LeftKeyCode].X
-			if repeat {
-				dc.cachePoint.X -= maxDirectionLen
-			}
-		} else if dc.isRightDown() {
-			dc.cachePoint.X = dc.keyMap[RightKeyCode].X
-			if repeat {
-				dc.cachePoint.X += maxDirectionLen
-			}
-		}
-	} else if dc.isBackDown() {
-		dc.cachePoint = *dc.keyMap[BackKeyCode]
-		if dc.isLeftDown() {
-			dc.cachePoint.X = dc.keyMap[LeftKeyCode].X
-		} else if dc.isRightDown() {
-			dc.cachePoint.X = dc.keyMap[RightKeyCode].X
-		}
-	} else if dc.isLeftDown() {
-		dc.cachePoint = *dc.keyMap[LeftKeyCode]
-	} else if dc.isRightDown() {
-		dc.cachePoint = *dc.keyMap[RightKeyCode]
+func (dc *directionController) prepare() {
+	if dc.middlePoint == nil {
+		dc.middlePoint = new(Point)
+		dc.middlePoint.X = dc.keyMap[FrontKeyCode].X
+		dc.middlePoint.Y = (dc.keyMap[FrontKeyCode].Y + dc.keyMap[BackKeyCode].Y) >> 1
+		dc.radius = dc.middlePoint.Y - dc.keyMap[FrontKeyCode].Y
 	}
+}
+
+func (dc *directionController) getPoint(repeat bool) *Point {
+	dc.prepare()
+	dc.cachePoint = *dc.middlePoint
+
+	if debugOpt {
+		log.Println("中间点：", *dc.middlePoint, "半径：", dc.radius)
+	}
+
+	if dc.isFrontDown() {
+		if debugOpt {
+			log.Println("向前")
+		}
+		dc.cachePoint.Y -= dc.radius
+	}
+
+	if dc.isLeftDown() {
+		if debugOpt {
+			log.Println("向左")
+		}
+		dc.cachePoint.X -= dc.radius
+	}
+
+	if dc.isRightDown() {
+		if debugOpt {
+			log.Println("向右")
+		}
+		dc.cachePoint.X += dc.radius
+	}
+
+	if dc.isBackDown() {
+		if debugOpt {
+			log.Println("向后")
+		}
+		dc.cachePoint.Y += dc.radius
+	}
+
+	if dc.cachePoint.Y < dc.middlePoint.Y {
+		if repeat {
+			if debugOpt {
+				log.Println("向前跑")
+			}
+			dc.cachePoint.Y -= deltaDirectionMovement
+		}
+
+		if dc.cachePoint.X < dc.middlePoint.X {
+			if debugOpt {
+				log.Println("向左跑")
+			}
+			dc.cachePoint.X -= deltaDirectionMovement
+		} else if dc.cachePoint.X > dc.middlePoint.X {
+			if debugOpt {
+				log.Println("向右跑")
+			}
+			dc.cachePoint.X += deltaDirectionMovement
+		}
+	}
+
 	return &dc.cachePoint
 }
 
-func (dc *directionController) sendMouseEvent(controller Controller, repeat uint8) error {
+func (dc *directionController) sendMouseEvent(controller Controller) error {
 	if dc.id == nil {
-		if repeat != 0 {
-			panic("repeat state error")
-		}
 		if dc.allUp() {
 			panic("press state error")
 		}
@@ -126,12 +156,13 @@ func (dc *directionController) sendMouseEvent(controller Controller, repeat uint
 		sme.Point = *point
 		return controller.PushEvent(&sme)
 	} else {
-		point := dc.getPoint(repeat != 0)
+		point := &dc.cachePoint
 		sme := singleMouseEvent{}
 		if dc.allUp() {
 			sme.action = AMOTION_EVENT_ACTION_UP
 		} else {
 			sme.action = AMOTION_EVENT_ACTION_MOVE
+			point = dc.getPoint(true)
 		}
 		sme.id = *dc.id
 		sme.Point = *point

@@ -1,8 +1,9 @@
 package scrcpy
 
 import (
-	"github.com/veandco/go-sdl2/sdl"
 	"log"
+
+	"github.com/veandco/go-sdl2/sdl"
 )
 
 const (
@@ -11,8 +12,6 @@ const (
 	VisionKeyCode
 	FrontKeyCode
 	BackKeyCode
-	LeftKeyCode
-	RightKeyCode
 )
 
 const cacheRectLen = 300
@@ -206,19 +205,19 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 			switch event.Keysym.Sym {
 			case sdl.K_w:
 				ch.directionController.frontDown()
-				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+				return true, ch.directionController.sendMouseEvent(ch.controller)
 
 			case sdl.K_s:
 				ch.directionController.backDown()
-				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+				return true, ch.directionController.sendMouseEvent(ch.controller)
 
 			case sdl.K_a:
 				ch.directionController.leftDown()
-				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+				return true, ch.directionController.sendMouseEvent(ch.controller)
 
 			case sdl.K_d:
 				ch.directionController.rightDown()
-				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+				return true, ch.directionController.sendMouseEvent(ch.controller)
 			}
 		}
 	}
@@ -246,19 +245,19 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			switch event.Keysym.Sym {
 			case sdl.K_w:
 				ch.directionController.frontUp()
-				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+				return true, ch.directionController.sendMouseEvent(ch.controller)
 
 			case sdl.K_s:
 				ch.directionController.backUp()
-				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+				return true, ch.directionController.sendMouseEvent(ch.controller)
 
 			case sdl.K_a:
 				ch.directionController.leftUp()
-				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+				return true, ch.directionController.sendMouseEvent(ch.controller)
 
 			case sdl.K_d:
 				ch.directionController.rightUp()
-				return true, ch.directionController.sendMouseEvent(ch.controller, event.Repeat)
+				return true, ch.directionController.sendMouseEvent(ch.controller)
 			}
 		}
 	}
