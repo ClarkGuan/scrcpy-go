@@ -69,56 +69,56 @@ public class EventController {
             coords = pointerCoords1[i];
             coords.orientation = 0;
             coords.pressure = 1;
-            coords.size = 1;
+            coords.size = (float) 0.007874016;
         }
         for (int i = 0; i < 2; i++) {
             pointerCoords2[i] = new MotionEvent.PointerCoords();
             coords = pointerCoords2[i];
             coords.orientation = 0;
             coords.pressure = 1;
-            coords.size = 1;
+            coords.size = (float) 0.007874016;
         }
         for (int i = 0; i < 3; i++) {
             pointerCoords3[i] = new MotionEvent.PointerCoords();
             coords = pointerCoords3[i];
             coords.orientation = 0;
             coords.pressure = 1;
-            coords.size = 1;
+            coords.size = (float) 0.007874016;
         }
         for (int i = 0; i < 4; i++) {
             pointerCoords4[i] = new MotionEvent.PointerCoords();
             coords = pointerCoords4[i];
             coords.orientation = 0;
             coords.pressure = 1;
-            coords.size = 1;
+            coords.size = (float) 0.007874016;
         }
         for (int i = 0; i < 5; i++) {
             pointerCoords5[i] = new MotionEvent.PointerCoords();
             coords = pointerCoords5[i];
             coords.orientation = 0;
             coords.pressure = 1;
-            coords.size = 1;
+            coords.size = (float) 0.007874016;
         }
         for (int i = 0; i < 6; i++) {
             pointerCoords6[i] = new MotionEvent.PointerCoords();
             coords = pointerCoords6[i];
             coords.orientation = 0;
             coords.pressure = 1;
-            coords.size = 1;
+            coords.size = (float) 0.007874016;
         }
         for (int i = 0; i < 7; i++) {
             pointerCoords7[i] = new MotionEvent.PointerCoords();
             coords = pointerCoords7[i];
             coords.orientation = 0;
             coords.pressure = 1;
-            coords.size = 1;
+            coords.size = (float) 0.007874016;
         }
         for (int i = 0; i < 8; i++) {
             pointerCoords8[i] = new MotionEvent.PointerCoords();
             coords = pointerCoords8[i];
             coords.orientation = 0;
             coords.pressure = 1;
-            coords.size = 1;
+            coords.size = (float) 0.007874016;
         }
     }
 
@@ -301,7 +301,7 @@ public class EventController {
                 coords[i] = new MotionEvent.PointerCoords();
                 coords[i].orientation = 0;
                 coords[i].pressure = 1;
-                coords[i].size = 1;
+                coords[i].size = (float) 0.007874016;
             }
             return coords;
         }

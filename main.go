@@ -41,6 +41,10 @@ func main() {
 			sdl.K_b:              {950, 907},
 			sdl.K_n:              {1162, 904},
 			sdl.K_8:              {1298, 907},
+			sdl.K_TAB:            {76, 1003},
+			sdl.K_m:              {2020, 53},
+			sdl.K_DOWN:           {1706, 838},
+			sdl.K_p:              {1901, 586},
 		},
 	}
 	log.Println(scrcpy.Main(&option))

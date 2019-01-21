@@ -15,8 +15,7 @@ const (
 	BackKeyCode
 )
 
-// 解决鼠标移动不平滑的问题
-const mouseAccuracy = 10
+const mouseJingDu = 3
 const eventVisionEventUp = sdl.USEREVENT + 3
 
 type controlHandler struct {
@@ -104,14 +103,24 @@ func (ch *controlHandler) outside(p *Point) bool {
 	return ret
 }
 
+func fixMouseBlock(x int32) int32 {
+	if x < mouseJingDu || x > -mouseJingDu {
+		return x
+	} else if x < 0 {
+		return -mouseJingDu
+	} else {
+		return mouseJingDu
+	}
+}
+
 func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
 	if ch.keyState[VisionKeyCode] == nil {
 		ch.keyState[VisionKeyCode] = fingers.GetId()
 		ch.cachePointer = *ch.keyMap[VisionKeyCode]
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.cachePointer)
 	} else {
-		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + event.XRel)
-		ch.cachePointer.Y = uint16(int32(ch.cachePointer.Y) + event.YRel + int32(delta))
+		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + fixMouseBlock(event.XRel))
+		ch.cachePointer.Y = uint16(int32(ch.cachePointer.Y) + fixMouseBlock(event.YRel) + int32(delta))
 		if ch.outside(&ch.cachePointer) {
 			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
@@ -132,7 +141,7 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 			if ch.keyState[mainPointerKeyCode] != nil {
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
 			} else if ch.keyState[FireKeyCode] != nil {
-				ch.visionMoving(event, 10)
+				ch.visionMoving(event, 0)
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 			} else {
 				panic("fire pointer state error")
