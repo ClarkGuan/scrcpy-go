@@ -15,7 +15,7 @@ const (
 	BackKeyCode
 )
 
-const mouseJingDu = 3
+const mouseJingDu = 2
 const eventVisionEventUp = sdl.USEREVENT + 3
 
 type controlHandler struct {
@@ -83,21 +83,24 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 
 func (ch *controlHandler) outside(p *Point) bool {
 	ret := false
-
-	if p.X < 5 {
+	minW := uint16(672)
+	maxW := uint16(1186)
+	if p.X < minW {
 		ret = true
-		p.X = 5
-	} else if p.X > ch.screen.frameSize.width-88-5 {
+		p.X = minW
+	} else if p.X > maxW {
 		ret = true
-		p.X = ch.screen.frameSize.width - 88 - 5
+		p.X = maxW
 	}
 
-	if p.Y < 5 {
+	minH := uint16(50)
+	maxH := uint16(834)
+	if p.Y < minH {
 		ret = true
-		p.Y = 5
-	} else if p.Y > ch.screen.frameSize.height-5 {
+		p.Y = minH
+	} else if p.Y > maxH {
 		ret = true
-		p.Y = ch.screen.frameSize.height - 5
+		p.Y = maxH
 	}
 
 	return ret
@@ -116,7 +119,7 @@ func fixMouseBlock(x int32) int32 {
 func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
 	if ch.keyState[VisionKeyCode] == nil {
 		ch.keyState[VisionKeyCode] = fingers.GetId()
-		ch.cachePointer = *ch.keyMap[VisionKeyCode]
+		ch.cachePointer = Point{929, 442}
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.cachePointer)
 	} else {
 		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + fixMouseBlock(event.XRel))
@@ -141,7 +144,7 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 			if ch.keyState[mainPointerKeyCode] != nil {
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
 			} else if ch.keyState[FireKeyCode] != nil {
-				ch.visionMoving(event, 0)
+				ch.visionMoving(event, 5)
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 			} else {
 				panic("fire pointer state error")
