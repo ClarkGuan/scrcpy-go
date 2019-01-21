@@ -30,6 +30,7 @@ type controlHandler struct {
 
 	directionController directionController
 	timer               *time.Timer
+	yaqiang             bool
 }
 
 func newControlHandler(controller Controller, screen *screen, keyMap map[int]*Point) *controlHandler {
@@ -144,7 +145,11 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 			if ch.keyState[mainPointerKeyCode] != nil {
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
 			} else if ch.keyState[FireKeyCode] != nil {
-				ch.visionMoving(event, 0)
+				if ch.yaqiang {
+					ch.visionMoving(event, 5)
+				} else {
+					ch.visionMoving(event, 0)
+				}
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 			} else {
 				panic("fire pointer state error")
@@ -269,6 +274,17 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 		return true, nil
 	}
 	ctrl := event.Keysym.Mod&(sdl.KMOD_RCTRL|sdl.KMOD_LCTRL) != 0
+
+	if ctrl {
+		switch event.Keysym.Sym {
+		case sdl.K_x:
+			sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
+
+		case sdl.K_z:
+			ch.yaqiang = !ch.yaqiang
+		}
+	}
+
 	if ctrl && event.Keysym.Sym == sdl.K_x {
 		sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
 	}
@@ -276,6 +292,18 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 	if !ctrl {
 		keyCode := int(event.Keysym.Sym)
 		if poi := ch.keyMap[keyCode]; poi != nil {
+			switch keyCode {
+			case sdl.K_e:
+				ch.yaqiang = !ch.yaqiang
+
+			case sdl.K_m:
+				fallthrough
+			case sdl.K_t:
+				fallthrough
+			case sdl.K_TAB:
+				sdl.SetRelativeMouseMode(true)
+			}
+
 			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[keyCode], *poi)
 			fingers.Recycle(ch.keyState[keyCode])
 			ch.keyState[keyCode] = nil
