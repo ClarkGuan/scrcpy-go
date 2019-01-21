@@ -18,6 +18,7 @@ type directionController struct {
 	radius      uint16
 	keyMap      map[int]*Point
 	id          *int
+	lastPoint   Point
 }
 
 func (dc *directionController) frontDown() {
@@ -158,9 +159,18 @@ func (dc *directionController) sendMouseEvent(controller Controller) error {
 		sme := singleMouseEvent{}
 		if dc.allUp() {
 			sme.action = AMOTION_EVENT_ACTION_UP
+			dc.lastPoint.Y = 0
+			dc.lastPoint.X = 0
 		} else {
 			sme.action = AMOTION_EVENT_ACTION_MOVE
 			point = dc.getPoint(true)
+
+			if dc.lastPoint == *point {
+				// 优化，少发一些事件
+				return nil
+			} else {
+				dc.lastPoint = *point
+			}
 		}
 		sme.id = *dc.id
 		sme.Point = *point

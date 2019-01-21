@@ -15,7 +15,7 @@ const (
 	BackKeyCode
 )
 
-const mouseJingDu = 2
+const mouseJingDu = 1
 const eventVisionEventUp = sdl.USEREVENT + 3
 
 type controlHandler struct {
@@ -130,7 +130,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 			ch.keyState[VisionKeyCode] = nil
 			return b, e
 		} else {
-			ch.sendEventDelay(time.Second)
+			ch.sendEventDelay(time.Millisecond * 650)
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
 		}
 	}
