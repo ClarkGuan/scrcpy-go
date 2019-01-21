@@ -9,7 +9,7 @@ const (
 	rightDirection
 )
 
-const deltaDirectionMovement = 150
+const deltaDirectionMovement = 125
 
 type directionController struct {
 	direction   Direction
@@ -118,26 +118,26 @@ func (dc *directionController) getPoint(repeat bool) *Point {
 		dc.cachePoint.Y += dc.radius
 	}
 
-	if dc.cachePoint.Y < dc.middlePoint.Y {
-		if repeat {
-			//if debugOpt {
-			//	log.Println("向前跑")
-			//}
-			dc.cachePoint.Y -= deltaDirectionMovement
-		}
-
-		if dc.cachePoint.X < dc.middlePoint.X {
-			//if debugOpt {
-			//	log.Println("向左跑")
-			//}
-			dc.cachePoint.X -= deltaDirectionMovement
-		} else if dc.cachePoint.X > dc.middlePoint.X {
-			//if debugOpt {
-			//	log.Println("向右跑")
-			//}
-			dc.cachePoint.X += deltaDirectionMovement
-		}
-	}
+	//if dc.cachePoint.Y < dc.middlePoint.Y {
+	//	if repeat {
+	//		//if debugOpt {
+	//		//	log.Println("向前跑")
+	//		//}
+	//		dc.cachePoint.Y -= deltaDirectionMovement
+	//	}
+	//
+	//	if dc.cachePoint.X < dc.middlePoint.X {
+	//		//if debugOpt {
+	//		//	log.Println("向左跑")
+	//		//}
+	//		dc.cachePoint.X -= deltaDirectionMovement
+	//	} else if dc.cachePoint.X > dc.middlePoint.X {
+	//		//if debugOpt {
+	//		//	log.Println("向右跑")
+	//		//}
+	//		dc.cachePoint.X += deltaDirectionMovement
+	//	}
+	//}
 
 	return &dc.cachePoint
 }

@@ -93,7 +93,7 @@ func (ch *controlHandler) outside(p *Point) bool {
 		p.X = maxW
 	}
 
-	minH := uint16(50)
+	minH := uint16(155)
 	maxH := uint16(834)
 	if p.Y < minH {
 		ret = true
@@ -144,7 +144,7 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 			if ch.keyState[mainPointerKeyCode] != nil {
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
 			} else if ch.keyState[FireKeyCode] != nil {
-				ch.visionMoving(event, 5)
+				ch.visionMoving(event, 0)
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 			} else {
 				panic("fire pointer state error")
