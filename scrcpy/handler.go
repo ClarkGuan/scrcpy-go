@@ -14,8 +14,6 @@ const (
 	BackKeyCode
 )
 
-const cacheRectLen = 300
-
 type controlHandler struct {
 	controller Controller
 	screen     *screen
@@ -69,16 +67,28 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 }
 
 func (ch *controlHandler) outside(p *Point) bool {
-	if deltaX := int(p.X) - int(ch.keyMap[VisionKeyCode].X); deltaX > cacheRectLen || deltaX <= -cacheRectLen {
-		return true
-	} else if deltaY := int(p.Y) - int(ch.keyMap[VisionKeyCode].Y); deltaY > cacheRectLen || deltaY <= -cacheRectLen {
-		return true
-	} else {
-		return false
+	ret := false
+
+	if p.X < 5 {
+		ret = true
+		p.X = 5
+	} else if p.X > ch.screen.frameSize.width-88-5 {
+		ret = true
+		p.X = ch.screen.frameSize.width - 88 - 5
 	}
+
+	if p.Y < 5 {
+		ret = true
+		p.Y = 5
+	} else if p.Y > ch.screen.frameSize.height-5 {
+		ret = true
+		p.Y = ch.screen.frameSize.height - 5
+	}
+
+	return ret
 }
 
-func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int, state uint32) (bool, error) {
+func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
 	if ch.keyState[VisionKeyCode] == nil {
 		ch.keyState[VisionKeyCode] = fingers.GetId()
 		ch.cachePointer = *ch.keyMap[VisionKeyCode]
@@ -86,7 +96,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int, s
 	} else {
 		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + event.XRel)
 		ch.cachePointer.Y = uint16(int32(ch.cachePointer.Y) + event.YRel + int32(delta))
-		if state == 0 && ch.outside(&ch.cachePointer) {
+		if ch.outside(&ch.cachePointer) {
 			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
 			ch.keyState[VisionKeyCode] = nil
@@ -100,12 +110,12 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int, s
 func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, error) {
 	if sdl.GetRelativeMouseMode() {
 		if event.State == 0 {
-			return ch.visionMoving(event, 0, event.State)
+			return ch.visionMoving(event, 0)
 		} else {
 			if ch.keyState[mainPointerKeyCode] != nil {
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
 			} else if ch.keyState[FireKeyCode] != nil {
-				ch.visionMoving(event, 0, 0)
+				ch.visionMoving(event, 0)
 				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 			} else {
 				panic("fire pointer state error")

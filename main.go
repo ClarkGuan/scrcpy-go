@@ -14,13 +14,13 @@ func main() {
 		MaxSize: 0,
 		Port:    27183,
 		KeyMap: map[int]*scrcpy.Point{
-			scrcpy.FireKeyCode:   {506, 76},
+			scrcpy.FireKeyCode:   {509, 86},
 			scrcpy.VisionKeyCode: {1600, 600},
-			scrcpy.FrontKeyCode:  {360, 700},
-			scrcpy.BackKeyCode:   {360, 926},
-			sdl.K_SPACE:          {2087, 755},
-			sdl.K_c:              {2050, 967},
-			sdl.K_LSHIFT:         {1871, 1003},
+			scrcpy.FrontKeyCode:  {350, 695},
+			scrcpy.BackKeyCode:   {350, 921},
+			sdl.K_SPACE:          {1994, 745},
+			sdl.K_c:              {1964, 978},
+			sdl.K_LSHIFT:         {1775, 1000},
 		},
 	}
 	log.Println(scrcpy.Main(&option))

@@ -1,7 +1,5 @@
 package scrcpy
 
-import "log"
-
 type Direction int
 
 const (
@@ -87,55 +85,55 @@ func (dc *directionController) getPoint(repeat bool) *Point {
 	dc.prepare()
 	dc.cachePoint = *dc.middlePoint
 
-	if debugOpt {
-		log.Println("中间点：", *dc.middlePoint, "半径：", dc.radius)
-	}
+	//if debugOpt {
+	//	log.Println("中间点：", *dc.middlePoint, "半径：", dc.radius)
+	//}
 
 	if dc.isFrontDown() {
-		if debugOpt {
-			log.Println("向前")
-		}
+		//if debugOpt {
+		//	log.Println("向前")
+		//}
 		dc.cachePoint.Y -= dc.radius
 	}
 
 	if dc.isLeftDown() {
-		if debugOpt {
-			log.Println("向左")
-		}
+		//if debugOpt {
+		//	log.Println("向左")
+		//}
 		dc.cachePoint.X -= dc.radius
 	}
 
 	if dc.isRightDown() {
-		if debugOpt {
-			log.Println("向右")
-		}
+		//if debugOpt {
+		//	log.Println("向右")
+		//}
 		dc.cachePoint.X += dc.radius
 	}
 
 	if dc.isBackDown() {
-		if debugOpt {
-			log.Println("向后")
-		}
+		//if debugOpt {
+		//	log.Println("向后")
+		//}
 		dc.cachePoint.Y += dc.radius
 	}
 
 	if dc.cachePoint.Y < dc.middlePoint.Y {
 		if repeat {
-			if debugOpt {
-				log.Println("向前跑")
-			}
+			//if debugOpt {
+			//	log.Println("向前跑")
+			//}
 			dc.cachePoint.Y -= deltaDirectionMovement
 		}
 
 		if dc.cachePoint.X < dc.middlePoint.X {
-			if debugOpt {
-				log.Println("向左跑")
-			}
+			//if debugOpt {
+			//	log.Println("向左跑")
+			//}
 			dc.cachePoint.X -= deltaDirectionMovement
 		} else if dc.cachePoint.X > dc.middlePoint.X {
-			if debugOpt {
-				log.Println("向右跑")
-			}
+			//if debugOpt {
+			//	log.Println("向右跑")
+			//}
 			dc.cachePoint.X += deltaDirectionMovement
 		}
 	}
