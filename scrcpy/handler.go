@@ -2,6 +2,7 @@ package scrcpy
 
 import (
 	"log"
+	"time"
 
 	"github.com/veandco/go-sdl2/sdl"
 )
@@ -14,6 +15,10 @@ const (
 	BackKeyCode
 )
 
+// 解决鼠标移动不平滑的问题
+const mouseAccuracy = 10
+const eventVisionEventUp = sdl.USEREVENT + 3
+
 type controlHandler struct {
 	controller Controller
 	screen     *screen
@@ -25,6 +30,7 @@ type controlHandler struct {
 	cachePointer Point
 
 	directionController directionController
+	timer               *time.Timer
 }
 
 func newControlHandler(controller Controller, screen *screen, keyMap map[int]*Point) *controlHandler {
@@ -47,6 +53,16 @@ func (ch *controlHandler) HandleControlEvent(c Controller, ent interface{}) inte
 
 func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 	switch event.GetType() {
+	case eventVisionEventUp:
+		var b bool
+		var e error
+		if ch.keyState[VisionKeyCode] != nil {
+			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
+			fingers.Recycle(ch.keyState[VisionKeyCode])
+			ch.keyState[VisionKeyCode] = nil
+		}
+		return b, e
+
 	case sdl.MOUSEMOTION:
 		return ch.handleMouseMotion(event.(*sdl.MouseMotionEvent))
 
@@ -102,6 +118,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 			ch.keyState[VisionKeyCode] = nil
 			return b, e
 		} else {
+			ch.sendEventDelay(time.Second)
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
 		}
 	}
@@ -278,8 +295,18 @@ func (ch *controlHandler) sendMouseEvent(action androidMotionEventAction, id int
 	sme := singleMouseEvent{action: action}
 	sme.id = id
 	sme.Point = p
-	if debugOpt {
-		log.Printf("action: %d id: %d %s", action, id, p)
-	}
+	//if debugOpt {
+	//	log.Printf("action: %d id: %d %s", action, id, p)
+	//}
 	return true, ch.controller.PushEvent(&sme)
+}
+
+func (ch *controlHandler) sendEventDelay(duration time.Duration) {
+	if ch.timer != nil {
+		ch.timer.Reset(duration)
+	} else {
+		ch.timer = time.AfterFunc(duration, func() {
+			sdl.PushEvent(&sdl.UserEvent{Type: eventVisionEventUp})
+		})
+	}
 }
