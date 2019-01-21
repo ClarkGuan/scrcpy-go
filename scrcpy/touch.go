@@ -108,12 +108,12 @@ func (set *mouseEventSet) Serialize(w io.Writer, data ...interface{}) error {
 	set.buf = append(set.buf, byte(len(set.points)))
 
 	// 写入数组内容
-	for id, p := range set.points {
+	for _, p := range set.points {
 		set.buf = append(set.buf, byte(p.X>>8))
 		set.buf = append(set.buf, byte(p.X))
 		set.buf = append(set.buf, byte(p.Y>>8))
 		set.buf = append(set.buf, byte(p.Y))
-		set.buf = append(set.buf, byte(id))
+		set.buf = append(set.buf, byte(p.id))
 	}
 
 	// 写入 frame size
