@@ -241,10 +241,14 @@ func (svr *server) connectAndReadByte(timeout time.Duration) (err error) {
 
 func (svr *server) getLocalServerPath() string {
 	svr.localSvrPathOnce.Do(func() {
-		svr.localSvrPath = "/usr/local/share/scrcpy/scrcpy-server.jar"
-		svrEnv := os.Getenv("SCRCPY_SERVER_PATH")
-		if len(svrEnv) > 0 {
-			svr.localSvrPath = svrEnv
+		if _, err := os.Stat("scrcpy-server.jar"); err == nil {
+			svr.localSvrPath = "scrcpy-server.jar"
+		} else {
+			svr.localSvrPath = "/usr/local/share/scrcpy/scrcpy-server.jar"
+			svrEnv := os.Getenv("SCRCPY_SERVER_PATH")
+			if len(svrEnv) > 0 {
+				svr.localSvrPath = svrEnv
+			}
 		}
 	})
 	return svr.localSvrPath
