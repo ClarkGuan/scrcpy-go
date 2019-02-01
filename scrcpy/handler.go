@@ -30,7 +30,7 @@ type controlHandler struct {
 
 	directionController directionController
 	timer               *time.Timer
-	//yaqiang             bool
+	doubleHit           bool
 }
 
 func newControlHandler(controller Controller, screen *screen, keyMap map[int]*Point) *controlHandler {
@@ -40,6 +40,8 @@ func newControlHandler(controller Controller, screen *screen, keyMap map[int]*Po
 	ch.keyMap = keyMap
 	ch.screen = screen
 	ch.directionController.keyMap = keyMap
+	// 默认开启连发模式
+	ch.doubleHit = true
 	return &ch
 }
 
@@ -115,7 +117,6 @@ func fixMouseBlock(x int32) int32 {
 	} else {
 		return mouseJingDu
 	}
-	//return x
 }
 
 func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
@@ -143,17 +144,29 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 		if event.State == 0 {
 			return ch.visionMoving(event, 0)
 		} else {
-			if ch.keyState[mainPointerKeyCode] != nil {
-				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-			} else if ch.keyState[FireKeyCode] != nil {
-				//if ch.yaqiang {
-				//	ch.visionMoving(event, 5)
-				//} else {
-				ch.visionMoving(event, 0)
-				//}
-				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+			if ch.doubleHit {
+				if ch.keyState[mainPointerKeyCode] != nil {
+					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
+				} else if ch.keyState[FireKeyCode] != nil {
+					ch.visionMoving(event, 0)
+					b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+					fingers.Recycle(ch.keyState[FireKeyCode])
+					ch.keyState[FireKeyCode] = nil
+					return b, e
+				} else {
+					ch.visionMoving(event, 0)
+					ch.keyState[FireKeyCode] = fingers.GetId()
+					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+				}
 			} else {
-				panic("fire pointer state error")
+				if ch.keyState[mainPointerKeyCode] != nil {
+					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
+				} else if ch.keyState[FireKeyCode] != nil {
+					ch.visionMoving(event, 0)
+					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+				} else {
+					panic("fire pointer state error")
+				}
 			}
 		}
 	} else {
@@ -186,8 +199,6 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 				log.Println("按下开火键")
 			}
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
-		} else {
-			panic("fire pointer state error")
 		}
 	} else {
 		if ch.keyState[mainPointerKeyCode] == nil {
@@ -215,8 +226,6 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 				log.Println("松开开火键")
 			}
 			return b, e
-		} else {
-			panic("fire pointer state error")
 		}
 	} else {
 		if ch.keyState[mainPointerKeyCode] != nil {
@@ -280,17 +289,14 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 		switch event.Keysym.Sym {
 		case sdl.K_x:
 			sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
-
-			//case sdl.K_z:
-			//	ch.yaqiang = !ch.yaqiang
+		case sdl.K_z:
+			ch.doubleHit = !ch.doubleHit
+			log.Printf("连击模式:%t\n", ch.doubleHit)
 		}
 	} else {
 		keyCode := int(event.Keysym.Sym)
 		if poi := ch.keyMap[keyCode]; poi != nil {
 			switch keyCode {
-			//case sdl.K_e:
-			//	ch.yaqiang = !ch.yaqiang
-
 			case sdl.K_m:
 				fallthrough
 			case sdl.K_t:
@@ -341,9 +347,6 @@ func (ch *controlHandler) sendMouseEvent(action androidMotionEventAction, id int
 	sme := singleMouseEvent{action: action}
 	sme.id = id
 	sme.Point = p
-	//if debugOpt {
-	//	log.Printf("action: %d id: %d %s", action, id, p)
-	//}
 	return true, ch.controller.PushEvent(&sme)
 }
 
