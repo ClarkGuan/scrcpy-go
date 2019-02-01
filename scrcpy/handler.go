@@ -15,7 +15,7 @@ const (
 	BackKeyCode
 )
 
-const mouseJingDu = 1
+const mouseJingDu = 10
 const eventVisionEventUp = sdl.USEREVENT + 3
 
 type controlHandler struct {
@@ -108,7 +108,7 @@ func (ch *controlHandler) outside(p *Point) bool {
 }
 
 func fixMouseBlock(x int32) int32 {
-	if x < mouseJingDu || x > -mouseJingDu {
+	if x < mouseJingDu && x > -mouseJingDu {
 		return x
 	} else if x < 0 {
 		return -mouseJingDu

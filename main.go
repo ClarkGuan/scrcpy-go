@@ -14,7 +14,7 @@ func main() {
 		MaxSize: 0,
 		Port:    27183,
 		KeyMap: map[int]*scrcpy.Point{
-			scrcpy.FireKeyCode:   {509, 86},
+			scrcpy.FireKeyCode:   {416, 86},
 			scrcpy.VisionKeyCode: {1525, 545},
 			scrcpy.FrontKeyCode:  {350, 695},
 			scrcpy.BackKeyCode:   {350, 921},
