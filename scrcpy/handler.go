@@ -320,6 +320,16 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			case sdl.K_d:
 				ch.directionController.rightUp()
 				return true, ch.directionController.sendMouseEvent(ch.controller)
+
+			case sdl.K_k:
+				mm := newMirrorMotion(Point{687, 227}, Point{675, 596})
+				mm.Start(ch.controller)
+				return true, nil
+
+			case sdl.K_l:
+				mm := newMirrorMotion(Point{687, 227}, Point{675, 341})
+				mm.Start(ch.controller)
+				return true, nil
 			}
 		}
 	}
