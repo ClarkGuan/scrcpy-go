@@ -31,6 +31,7 @@ type controlHandler struct {
 	directionController directionController
 	timer               *time.Timer
 	doubleHit           bool
+	*continuousFire
 }
 
 func newControlHandler(controller Controller, screen *screen, keyMap map[int]*Point) *controlHandler {
@@ -153,10 +154,9 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 					fingers.Recycle(ch.keyState[FireKeyCode])
 					ch.keyState[FireKeyCode] = nil
 					return b, e
-				} else {
+				} else if ch.continuousFire != nil {
 					ch.visionMoving(event, 0)
-					ch.keyState[FireKeyCode] = fingers.GetId()
-					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+					return true, nil
 				}
 			} else {
 				if ch.keyState[mainPointerKeyCode] != nil {
@@ -193,12 +193,21 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 
 func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bool, error) {
 	if sdl.GetRelativeMouseMode() {
-		if ch.keyState[FireKeyCode] == nil {
-			ch.keyState[FireKeyCode] = fingers.GetId()
-			if debugOpt {
-				log.Println("按下开火键")
+		if ch.doubleHit {
+			if ch.continuousFire == nil {
+				ch.continuousFire = new(continuousFire)
+				ch.continuousFire.Point = *ch.keyMap[FireKeyCode]
+				ch.continuousFire.Start(ch.controller)
+				return true, nil
 			}
-			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+		} else {
+			if ch.keyState[FireKeyCode] == nil {
+				ch.keyState[FireKeyCode] = fingers.GetId()
+				if debugOpt {
+					log.Println("按下开火键")
+				}
+				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+			}
 		}
 	} else {
 		if ch.keyState[mainPointerKeyCode] == nil {
@@ -226,6 +235,10 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 				log.Println("松开开火键")
 			}
 			return b, e
+		} else if ch.continuousFire != nil {
+			ch.continuousFire.Stop()
+			ch.continuousFire = nil
+			return true, nil
 		}
 	} else {
 		if ch.keyState[mainPointerKeyCode] != nil {
