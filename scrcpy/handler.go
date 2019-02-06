@@ -15,7 +15,7 @@ const (
 	BackKeyCode
 )
 
-const mouseJingDu = 15
+const mouseJingDu = .4
 const eventVisionEventUp = sdl.USEREVENT + 3
 
 type controlHandler struct {
@@ -87,8 +87,8 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 
 func (ch *controlHandler) outside(p *Point) bool {
 	ret := false
-	minW := uint16(672)
-	maxW := uint16(1186)
+	minW := uint16(650)
+	maxW := uint16(1200)
 	if p.X < minW {
 		ret = true
 		p.X = minW
@@ -97,8 +97,8 @@ func (ch *controlHandler) outside(p *Point) bool {
 		p.X = maxW
 	}
 
-	minH := uint16(155)
-	maxH := uint16(834)
+	minH := uint16(100)
+	maxH := uint16(850)
 	if p.Y < minH {
 		ret = true
 		p.Y = minH
@@ -111,13 +111,8 @@ func (ch *controlHandler) outside(p *Point) bool {
 }
 
 func fixMouseBlock(x int32) int32 {
-	if x < mouseJingDu && x > -mouseJingDu {
-		return x
-	} else if x < 0 {
-		return -mouseJingDu
-	} else {
-		return mouseJingDu
-	}
+	fx := float64(x)
+	return int32(fx*mouseJingDu + .5)
 }
 
 func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
