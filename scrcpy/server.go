@@ -246,10 +246,15 @@ func (svr *server) getLocalServerPath() string {
 		if _, err := os.Stat(path); err == nil {
 			svr.localSvrPath = path
 		} else {
-			svr.localSvrPath = "/usr/local/share/scrcpy/scrcpy-server.jar"
-			svrEnv := os.Getenv("SCRCPY_SERVER_PATH")
-			if len(svrEnv) > 0 {
-				svr.localSvrPath = svrEnv
+			path = filepath.Join(os.Getenv("GOPATH"), "bin", "scrcpy-server.jar")
+			if _, err := os.Stat(path); err == nil {
+				svr.localSvrPath = path
+			} else {
+				svr.localSvrPath = "/usr/local/share/scrcpy/scrcpy-server.jar"
+				svrEnv := os.Getenv("SCRCPY_SERVER_PATH")
+				if len(svrEnv) > 0 {
+					svr.localSvrPath = svrEnv
+				}
 			}
 		}
 	})
