@@ -15,7 +15,7 @@ const (
 	BackKeyCode
 )
 
-const mouseJingDu = .4
+const mouseAccuracy = .25
 const eventVisionEventUp = sdl.USEREVENT + 3
 
 type controlHandler struct {
@@ -112,13 +112,14 @@ func (ch *controlHandler) outside(p *Point) bool {
 
 func fixMouseBlock(x int32) int32 {
 	fx := float64(x)
-	return int32(fx*mouseJingDu + .5)
+	return int32(fx*mouseAccuracy + .5)
 }
 
 func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
 	if ch.keyState[VisionKeyCode] == nil {
 		ch.keyState[VisionKeyCode] = fingers.GetId()
-		ch.cachePointer = Point{929, 442}
+		ch.cachePointer = Point{950, 450}
+		ch.sendEventDelay(time.Millisecond * 800)
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.cachePointer)
 	} else {
 		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + fixMouseBlock(event.XRel))
@@ -129,7 +130,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 			ch.keyState[VisionKeyCode] = nil
 			return b, e
 		} else {
-			ch.sendEventDelay(time.Millisecond * 650)
+			ch.sendEventDelay(time.Millisecond * 800)
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
 		}
 	}
