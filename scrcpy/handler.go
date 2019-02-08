@@ -16,8 +16,9 @@ const (
 )
 
 const mouseAccuracy = .25
-const eventVisionEventUp = sdl.USEREVENT + 3
 const mouseVisionDelay = time.Millisecond * 500
+const eventVisionEventUp = sdl.USEREVENT + 3
+const eventDirectionEvent = sdl.USEREVENT + 4
 
 type controlHandler struct {
 	controller Controller
@@ -66,6 +67,9 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 			ch.keyState[VisionKeyCode] = nil
 		}
 		return b, e
+
+	case eventDirectionEvent:
+		return true, ch.directionController.sendMouseEvent(ch.controller)
 
 	case sdl.MOUSEMOTION:
 		return ch.handleMouseMotion(event.(*sdl.MouseMotionEvent))
@@ -277,19 +281,23 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 			switch event.Keysym.Sym {
 			case sdl.K_w:
 				ch.directionController.frontDown()
-				return true, ch.directionController.sendMouseEvent(ch.controller)
+				ch.directionController.Start()
+				return true, nil
 
 			case sdl.K_s:
 				ch.directionController.backDown()
-				return true, ch.directionController.sendMouseEvent(ch.controller)
+				ch.directionController.Start()
+				return true, nil
 
 			case sdl.K_a:
 				ch.directionController.leftDown()
-				return true, ch.directionController.sendMouseEvent(ch.controller)
+				ch.directionController.Start()
+				return true, nil
 
 			case sdl.K_d:
 				ch.directionController.rightDown()
-				return true, ch.directionController.sendMouseEvent(ch.controller)
+				ch.directionController.Start()
+				return true, nil
 			}
 		}
 	}
@@ -331,19 +339,19 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			switch event.Keysym.Sym {
 			case sdl.K_w:
 				ch.directionController.frontUp()
-				return true, ch.directionController.sendMouseEvent(ch.controller)
+				return true, nil
 
 			case sdl.K_s:
 				ch.directionController.backUp()
-				return true, ch.directionController.sendMouseEvent(ch.controller)
+				return true, nil
 
 			case sdl.K_a:
 				ch.directionController.leftUp()
-				return true, ch.directionController.sendMouseEvent(ch.controller)
+				return true, nil
 
 			case sdl.K_d:
 				ch.directionController.rightUp()
-				return true, ch.directionController.sendMouseEvent(ch.controller)
+				return true, nil
 
 			case sdl.K_k:
 				mm := newMirrorMotion(Point{687, 227}, Point{675, 596})

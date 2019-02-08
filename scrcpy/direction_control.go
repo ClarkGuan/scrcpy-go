@@ -1,5 +1,12 @@
 package scrcpy
 
+import (
+	"sync/atomic"
+	"time"
+
+	"github.com/veandco/go-sdl2/sdl"
+)
+
 type Direction int
 
 const (
@@ -18,7 +25,8 @@ type directionController struct {
 	radius      uint16
 	keyMap      map[int]*Point
 	id          *int
-	lastPoint   Point
+	startFlag   int32
+	animator
 }
 
 func (dc *directionController) frontDown() {
@@ -117,10 +125,33 @@ func (dc *directionController) getPoint(repeat bool) *Point {
 	return &dc.cachePoint
 }
 
+func (dc *directionController) Start() {
+	for {
+		f := atomic.LoadInt32(&dc.startFlag)
+		if f == 1 {
+			break
+		}
+		if atomic.CompareAndSwapInt32(&dc.startFlag, 0, 1) {
+			dc.animator.InProgress = dc.inProgress
+			dc.animator.Start(nil)
+		}
+	}
+}
+
+func (dc *directionController) inProgress(data interface{}) time.Duration {
+	if atomic.LoadInt32(&dc.startFlag) == 0 {
+		return 0
+	} else {
+		sdl.PushEvent(&sdl.UserEvent{Type: eventDirectionEvent})
+		return time.Millisecond * 100
+	}
+}
+
 func (dc *directionController) sendMouseEvent(controller Controller) error {
 	if dc.id == nil {
 		if dc.allUp() {
-			panic("press state error")
+			atomic.StoreInt32(&dc.startFlag, 0)
+			return nil
 		}
 
 		dc.id = fingers.GetId()
@@ -134,18 +165,9 @@ func (dc *directionController) sendMouseEvent(controller Controller) error {
 		sme := singleMouseEvent{}
 		if dc.allUp() {
 			sme.action = AMOTION_EVENT_ACTION_UP
-			dc.lastPoint.Y = 0
-			dc.lastPoint.X = 0
 		} else {
 			sme.action = AMOTION_EVENT_ACTION_MOVE
 			point = dc.getPoint(true)
-
-			if dc.lastPoint == *point {
-				// 优化，少发一些事件
-				return nil
-			} else {
-				dc.lastPoint = *point
-			}
 		}
 		sme.id = *dc.id
 		sme.Point = *point
@@ -153,6 +175,7 @@ func (dc *directionController) sendMouseEvent(controller Controller) error {
 		if dc.allUp() {
 			fingers.Recycle(dc.id)
 			dc.id = nil
+			atomic.StoreInt32(&dc.startFlag, 0)
 		}
 		return b
 	}
