@@ -47,6 +47,16 @@ func main() {
 			sdl.K_UP:             {1755, 642},
 			sdl.K_DOWN:           {1706, 838},
 			sdl.K_p:              {1901, 586},
+			sdl.K_x:              {2014, 450},
+		},
+		CtrlKeyMap: map[int]*scrcpy.Point{
+			sdl.K_1: {1742, 463},
+			sdl.K_2: {1868, 460},
+			sdl.K_3: {1755, 576},
+			sdl.K_4: {1855, 573},
+			sdl.K_5: {1759, 695},
+			sdl.K_6: {1878, 692},
+			sdl.K_7: {1755, 811},
 		},
 	}
 	log.Println(scrcpy.Main(&option))

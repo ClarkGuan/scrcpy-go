@@ -28,6 +28,9 @@ type controlHandler struct {
 	keyState map[int]*int
 	keyMap   map[int]*Point
 
+	ctrlKeyState map[int]*int
+	ctrlKeyMap   map[int]*Point
+
 	cachePointer Point
 
 	directionController directionController
@@ -36,11 +39,13 @@ type controlHandler struct {
 	*continuousFire
 }
 
-func newControlHandler(controller Controller, screen *screen, keyMap map[int]*Point) *controlHandler {
+func newControlHandler(controller Controller, screen *screen, keyMap, ctrlKeyMap map[int]*Point) *controlHandler {
 	ch := controlHandler{controller: controller}
 	controller.Register(&ch)
 	ch.keyState = make(map[int]*int)
+	ch.ctrlKeyState = make(map[int]*int)
 	ch.keyMap = keyMap
+	ch.ctrlKeyMap = ctrlKeyMap
 	ch.screen = screen
 	ch.directionController.keyMap = keyMap
 	// 默认开启连发模式
@@ -268,7 +273,17 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 		return true, nil
 	}
 	ctrl := event.Keysym.Mod&(sdl.KMOD_RCTRL|sdl.KMOD_LCTRL) != 0
-	if !ctrl {
+	if ctrl {
+		keyCode := int(event.Keysym.Sym)
+		if poi := ch.ctrlKeyMap[keyCode]; poi != nil {
+			if ch.ctrlKeyState[keyCode] == nil {
+				ch.ctrlKeyState[keyCode] = fingers.GetId()
+				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.ctrlKeyState[keyCode], *poi)
+			} else {
+				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.ctrlKeyState[keyCode], *poi)
+			}
+		}
+	} else {
 		keyCode := int(event.Keysym.Sym)
 		if poi := ch.keyMap[keyCode]; poi != nil {
 			if ch.keyState[keyCode] == nil {
@@ -312,12 +327,20 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 	ctrl := event.Keysym.Mod&(sdl.KMOD_RCTRL|sdl.KMOD_LCTRL) != 0
 
 	if ctrl {
-		switch event.Keysym.Sym {
-		case sdl.K_x:
-			sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
-		case sdl.K_z:
-			ch.doubleHit = !ch.doubleHit
-			log.Printf("连击模式:%t\n", ch.doubleHit)
+		keyCode := int(event.Keysym.Sym)
+		if poi := ch.ctrlKeyMap[keyCode]; poi != nil {
+			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.ctrlKeyState[keyCode], *poi)
+			fingers.Recycle(ch.ctrlKeyState[keyCode])
+			ch.ctrlKeyState[keyCode] = nil
+			return b, e
+		} else {
+			switch event.Keysym.Sym {
+			case sdl.K_x:
+				sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
+			case sdl.K_z:
+				ch.doubleHit = !ch.doubleHit
+				log.Printf("连击模式:%t\n", ch.doubleHit)
+			}
 		}
 	} else {
 		keyCode := int(event.Keysym.Sym)
