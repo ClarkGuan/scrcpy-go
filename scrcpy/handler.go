@@ -30,7 +30,7 @@ type controlHandler struct {
 	cachePointer Point
 
 	directionController directionController
-	timer               *time.Timer
+	timer               map[uint32]*time.Timer
 	doubleHit           bool
 	*continuousFire
 }
@@ -115,7 +115,11 @@ func fixMouseBlock(x int32) int32 {
 	fx := float64(x)
 	ret := int32(fx*mouseAccuracy + .5)
 	if ret == 0 && x != 0 {
-		ret = 1
+		if x > 0 {
+			ret = 1
+		} else {
+			ret = -1
+		}
 	}
 	return ret
 }
@@ -124,7 +128,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 	if ch.keyState[VisionKeyCode] == nil {
 		ch.keyState[VisionKeyCode] = fingers.GetId()
 		ch.cachePointer = Point{950, 450}
-		ch.sendEventDelay(mouseVisionDelay)
+		ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.cachePointer)
 	} else {
 		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + fixMouseBlock(event.XRel))
@@ -135,7 +139,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 			ch.keyState[VisionKeyCode] = nil
 			return b, e
 		} else {
-			ch.sendEventDelay(mouseVisionDelay)
+			ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
 		}
 	}
@@ -364,12 +368,16 @@ func (ch *controlHandler) sendMouseEvent(action androidMotionEventAction, id int
 	return true, ch.controller.PushEvent(&sme)
 }
 
-func (ch *controlHandler) sendEventDelay(duration time.Duration) {
-	if ch.timer != nil {
-		ch.timer.Reset(duration)
+func (ch *controlHandler) sendEventDelay(typ uint32, duration time.Duration) {
+	if ch.timer == nil {
+		ch.timer = make(map[uint32]*time.Timer)
+	}
+
+	if ch.timer[typ] != nil {
+		ch.timer[typ].Reset(duration)
 	} else {
-		ch.timer = time.AfterFunc(duration, func() {
-			sdl.PushEvent(&sdl.UserEvent{Type: eventVisionEventUp})
+		ch.timer[typ] = time.AfterFunc(duration, func() {
+			sdl.PushEvent(&sdl.UserEvent{Type: typ})
 		})
 	}
 }
