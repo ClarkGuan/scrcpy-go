@@ -16,7 +16,9 @@ const (
 	rightDirection
 )
 
-const deltaDirectionMovement = 150
+// 斜上 70，正上 150
+const deltaDirectionObliqueMovement = 70
+const deltaDirectionRightUpMovement = 150
 
 type directionController struct {
 	direction   Direction
@@ -110,15 +112,17 @@ func (dc *directionController) getPoint(repeat bool) *Point {
 		dc.cachePoint.Y += dc.radius
 	}
 
-	if dc.cachePoint.Y < dc.middlePoint.Y {
-		if repeat {
-			dc.cachePoint.Y -= deltaDirectionMovement
-		}
-
-		if dc.cachePoint.X < dc.middlePoint.X {
-			dc.cachePoint.X -= deltaDirectionMovement
-		} else if dc.cachePoint.X > dc.middlePoint.X {
-			dc.cachePoint.X += deltaDirectionMovement
+	if repeat {
+		if dc.cachePoint.Y < dc.middlePoint.Y {
+			if dc.cachePoint.X < dc.middlePoint.X {
+				dc.cachePoint.Y -= deltaDirectionObliqueMovement
+				dc.cachePoint.X -= deltaDirectionObliqueMovement
+			} else if dc.cachePoint.X > dc.middlePoint.X {
+				dc.cachePoint.Y -= deltaDirectionObliqueMovement
+				dc.cachePoint.X += deltaDirectionObliqueMovement
+			} else {
+				dc.cachePoint.Y -= deltaDirectionRightUpMovement
+			}
 		}
 	}
 
@@ -127,13 +131,13 @@ func (dc *directionController) getPoint(repeat bool) *Point {
 
 func (dc *directionController) Start() {
 	for {
-		f := atomic.LoadInt32(&dc.startFlag)
-		if f == 1 {
-			break
+		if atomic.LoadInt32(&dc.startFlag) == 1 {
+			return
 		}
 		if atomic.CompareAndSwapInt32(&dc.startFlag, 0, 1) {
 			dc.animator.InProgress = dc.inProgress
 			dc.animator.Start(nil)
+			return
 		}
 	}
 }
@@ -143,7 +147,7 @@ func (dc *directionController) inProgress(data interface{}) time.Duration {
 		return 0
 	} else {
 		sdl.PushEvent(&sdl.UserEvent{Type: eventDirectionEvent})
-		return time.Millisecond * 100
+		return time.Millisecond * 80
 	}
 }
 
