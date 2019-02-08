@@ -17,6 +17,7 @@ const (
 
 const mouseAccuracy = .25
 const eventVisionEventUp = sdl.USEREVENT + 3
+const mouseVisionDelay = time.Millisecond * 500
 
 type controlHandler struct {
 	controller Controller
@@ -123,7 +124,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 	if ch.keyState[VisionKeyCode] == nil {
 		ch.keyState[VisionKeyCode] = fingers.GetId()
 		ch.cachePointer = Point{950, 450}
-		ch.sendEventDelay(time.Millisecond * 800)
+		ch.sendEventDelay(mouseVisionDelay)
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.cachePointer)
 	} else {
 		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + fixMouseBlock(event.XRel))
@@ -134,7 +135,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 			ch.keyState[VisionKeyCode] = nil
 			return b, e
 		} else {
-			ch.sendEventDelay(time.Millisecond * 800)
+			ch.sendEventDelay(mouseVisionDelay)
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
 		}
 	}
