@@ -11,7 +11,6 @@ type continuousFire struct {
 	Point
 	state int
 	id    *int
-	up    bool
 }
 
 func (cf *continuousFire) Start(c Controller) {
@@ -25,19 +24,16 @@ func (cf *continuousFire) inProgress(data interface{}) time.Duration {
 		cf.state = cf.state % 3
 		switch cf.state {
 		case 0:
-			if cf.id == nil {
-				cf.id = fingers.GetId()
-			}
-			cf.up = false
+			cf.id = fingers.GetId()
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_DOWN, *cf.id)
 
 		case 1:
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_MOVE, *cf.id)
-			cf.up = false
 
 		case 2:
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_UP, *cf.id)
-			cf.up = true
+			fingers.Recycle(cf.id)
+			cf.id = nil
 
 		default:
 			panic("can't reach here")
@@ -46,10 +42,7 @@ func (cf *continuousFire) inProgress(data interface{}) time.Duration {
 		return 30 * time.Millisecond
 	} else {
 		if cf.id != nil {
-			if !cf.up {
-				cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_UP, *cf.id)
-				cf.up = true
-			}
+			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_UP, *cf.id)
 			fingers.Recycle(cf.id)
 			cf.id = nil
 		}
