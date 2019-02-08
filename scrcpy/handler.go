@@ -354,10 +354,12 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 				sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
 			}
 
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[keyCode], *poi)
-			fingers.Recycle(ch.keyState[keyCode])
-			ch.keyState[keyCode] = nil
-			return b, e
+			if ch.keyState[keyCode] != nil {
+				b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[keyCode], *poi)
+				fingers.Recycle(ch.keyState[keyCode])
+				ch.keyState[keyCode] = nil
+				return b, e
+			}
 		} else {
 			switch event.Keysym.Sym {
 			case sdl.K_w:
