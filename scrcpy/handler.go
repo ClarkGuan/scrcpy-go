@@ -112,7 +112,11 @@ func (ch *controlHandler) outside(p *Point) bool {
 
 func fixMouseBlock(x int32) int32 {
 	fx := float64(x)
-	return int32(fx*mouseAccuracy + .5)
+	ret := int32(fx*mouseAccuracy + .5)
+	if ret == 0 && x != 0 {
+		ret = 1
+	}
+	return ret
 }
 
 func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
