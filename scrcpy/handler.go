@@ -156,7 +156,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 
 func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, error) {
 	if sdl.GetRelativeMouseMode() {
-		if event.State == 0 {
+		if event.State != sdl.BUTTON_LEFT {
 			return ch.visionMoving(event, 0)
 		} else {
 			if ch.doubleHit {
@@ -191,79 +191,88 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 			return b, e
 		}
 
-		if event.State == 0 {
+		if event.State != sdl.BUTTON_LEFT {
 			return true, nil
+		} else {
+			if ch.keyState[mainPointerKeyCode] != nil {
+				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
+			} else {
+				panic("main pointer state error")
+			}
 		}
 
-		if ch.keyState[mainPointerKeyCode] != nil {
-			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-		} else {
-			panic("main pointer state error")
-		}
 	}
 
 	return true, nil
 }
 
 func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bool, error) {
-	if sdl.GetRelativeMouseMode() {
-		if ch.doubleHit {
-			if ch.continuousFire == nil {
-				ch.continuousFire = new(continuousFire)
-				ch.continuousFire.Point = *ch.keyMap[FireKeyCode]
-				ch.continuousFire.Start(ch.controller)
-				return true, nil
-			}
-		} else {
-			if ch.keyState[FireKeyCode] == nil {
-				ch.keyState[FireKeyCode] = fingers.GetId()
-				if debugOpt {
-					log.Println("按下开火键")
+	// 鼠标左键
+	if event.Button == sdl.BUTTON_LEFT {
+		if sdl.GetRelativeMouseMode() {
+			if ch.doubleHit {
+				if ch.continuousFire == nil {
+					ch.continuousFire = new(continuousFire)
+					ch.continuousFire.Point = *ch.keyMap[FireKeyCode]
+					ch.continuousFire.Start(ch.controller)
+					return true, nil
 				}
-				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+			} else {
+				if ch.keyState[FireKeyCode] == nil {
+					ch.keyState[FireKeyCode] = fingers.GetId()
+					if debugOpt {
+						log.Println("按下开火键")
+					}
+					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+				}
 			}
-		}
-	} else {
-		if ch.keyState[mainPointerKeyCode] == nil {
-			ch.keyState[mainPointerKeyCode] = fingers.GetId()
-			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
 		} else {
-			panic("main pointer state error")
+			if ch.keyState[mainPointerKeyCode] == nil {
+				ch.keyState[mainPointerKeyCode] = fingers.GetId()
+				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
+			} else {
+				panic("main pointer state error")
+			}
 		}
 	}
+
 	return false, nil
 }
 
 func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool, error) {
-	if sdl.GetRelativeMouseMode() {
-		if ch.keyState[mainPointerKeyCode] != nil {
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-			fingers.Recycle(ch.keyState[mainPointerKeyCode])
-			ch.keyState[mainPointerKeyCode] = nil
-			return b, e
-		} else if ch.keyState[FireKeyCode] != nil {
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
-			fingers.Recycle(ch.keyState[FireKeyCode])
-			ch.keyState[FireKeyCode] = nil
-			if debugOpt {
-				log.Println("松开开火键")
+	// 鼠标左键
+	if event.Button == sdl.BUTTON_LEFT {
+		if sdl.GetRelativeMouseMode() {
+			if ch.keyState[mainPointerKeyCode] != nil {
+				b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
+				fingers.Recycle(ch.keyState[mainPointerKeyCode])
+				ch.keyState[mainPointerKeyCode] = nil
+				return b, e
+			} else if ch.keyState[FireKeyCode] != nil {
+				b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
+				fingers.Recycle(ch.keyState[FireKeyCode])
+				ch.keyState[FireKeyCode] = nil
+				if debugOpt {
+					log.Println("松开开火键")
+				}
+				return b, e
+			} else if ch.continuousFire != nil {
+				ch.continuousFire.Stop()
+				ch.continuousFire = nil
+				return true, nil
 			}
-			return b, e
-		} else if ch.continuousFire != nil {
-			ch.continuousFire.Stop()
-			ch.continuousFire = nil
-			return true, nil
-		}
-	} else {
-		if ch.keyState[mainPointerKeyCode] != nil {
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-			fingers.Recycle(ch.keyState[mainPointerKeyCode])
-			ch.keyState[mainPointerKeyCode] = nil
-			return b, e
 		} else {
-			panic("main pointer state error")
+			if ch.keyState[mainPointerKeyCode] != nil {
+				b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
+				fingers.Recycle(ch.keyState[mainPointerKeyCode])
+				ch.keyState[mainPointerKeyCode] = nil
+				return b, e
+			} else {
+				panic("main pointer state error")
+			}
 		}
 	}
+
 	return false, nil
 }
 
