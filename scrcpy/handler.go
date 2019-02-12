@@ -49,7 +49,7 @@ func newControlHandler(controller Controller, screen *screen, keyMap, ctrlKeyMap
 	ch.screen = screen
 	ch.directionController.keyMap = keyMap
 	// 默认开启连发模式
-	ch.doubleHit = true
+	ch.doubleHit = false
 	return &ch
 }
 
@@ -271,6 +271,9 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 				panic("main pointer state error")
 			}
 		}
+	} else if event.Button == sdl.BUTTON_RIGHT {
+		ch.doubleHit = !ch.doubleHit
+		log.Printf("连击模式:%t\n", ch.doubleHit)
 	}
 
 	return false, nil

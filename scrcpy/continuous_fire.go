@@ -21,25 +21,22 @@ func (cf *continuousFire) Start(c Controller) {
 func (cf *continuousFire) inProgress(data interface{}) time.Duration {
 	c := data.(Controller)
 	if atomic.LoadInt32(&cf.stopFlag) != 1 {
-		cf.state = cf.state % 3
+		cf.state = cf.state % 2
 		switch cf.state {
 		case 0:
 			cf.id = fingers.GetId()
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_DOWN, *cf.id)
+			cf.state++
+			return 100 * time.Millisecond
 
 		case 1:
-			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_MOVE, *cf.id)
-
-		case 2:
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_UP, *cf.id)
 			fingers.Recycle(cf.id)
 			cf.id = nil
-
-		default:
-			panic("can't reach here")
+			cf.state++
+			return 250 * time.Millisecond
 		}
-		cf.state++
-		return 30 * time.Millisecond
+		panic("can't reach here")
 	} else {
 		if cf.id != nil {
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_UP, *cf.id)
