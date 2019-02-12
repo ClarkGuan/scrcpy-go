@@ -146,20 +146,22 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 		}
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.cachePointer)
 	} else {
-		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + fixMouseBlock(event.XRel))
-		ch.cachePointer.Y = uint16(int32(ch.cachePointer.Y) + fixMouseBlock(event.YRel) + int32(delta))
+		deltaX := fixMouseBlock(event.XRel)
+		deltaY := fixMouseBlock(event.YRel)
+		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + deltaX)
+		ch.cachePointer.Y = uint16(int32(ch.cachePointer.Y) + deltaY + int32(delta))
 		if ch.outside(&ch.cachePointer) {
 			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
 			ch.keyState[VisionKeyCode] = nil
 			if debugOpt.Info() {
-				log.Println("视角控制，超出范围，点：", ch.cachePointer)
+				log.Printf("视角控制(%d, %d)，超出范围，点：%s\n", deltaX, deltaY, ch.cachePointer)
 			}
 			return b, e
 		} else {
 			ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
 			if debugOpt.Info() {
-				log.Println("视角控制，点：", ch.cachePointer)
+				log.Printf("视角控制(%d, %d)，点：%s\n", deltaX, deltaY, ch.cachePointer)
 			}
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
 		}
