@@ -70,6 +70,9 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
 			ch.keyState[VisionKeyCode] = nil
+			if debugOpt.Info() {
+				log.Println("视角控制，松开，点：", ch.cachePointer)
+			}
 		}
 		return b, e
 
