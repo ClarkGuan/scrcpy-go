@@ -10,8 +10,8 @@ const (
 	MinLevel DebugLevel = iota
 	Error
 	Warn
-	Debug
 	Info
+	Debug
 	MaxLevel
 )
 

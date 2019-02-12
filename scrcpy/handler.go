@@ -138,6 +138,9 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 		ch.keyState[VisionKeyCode] = fingers.GetId()
 		ch.cachePointer = Point{950, 450}
 		ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
+		if debugOpt.Info() {
+			log.Println("视角控制，开始，点：", ch.cachePointer)
+		}
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.cachePointer)
 	} else {
 		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + fixMouseBlock(event.XRel))
@@ -146,9 +149,15 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
 			ch.keyState[VisionKeyCode] = nil
+			if debugOpt.Info() {
+				log.Println("视角控制，超出范围，点：", ch.cachePointer)
+			}
 			return b, e
 		} else {
 			ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
+			if debugOpt.Info() {
+				log.Println("视角控制，点：", ch.cachePointer)
+			}
 			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
 		}
 	}
@@ -273,7 +282,9 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 		}
 	} else if event.Button == sdl.BUTTON_RIGHT {
 		ch.doubleHit = !ch.doubleHit
-		log.Printf("连击模式:%t\n", ch.doubleHit)
+		if debugOpt.Debug() {
+			log.Printf("连击模式:%t\n", ch.doubleHit)
+		}
 	}
 
 	return false, nil
@@ -351,7 +362,9 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 				sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
 			case sdl.K_z:
 				ch.doubleHit = !ch.doubleHit
-				log.Printf("连击模式:%t\n", ch.doubleHit)
+				if debugOpt.Debug() {
+					log.Printf("连击模式:%t\n", ch.doubleHit)
+				}
 			}
 		}
 	} else {
