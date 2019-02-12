@@ -9,7 +9,7 @@ import (
 
 func main() {
 	option := scrcpy.Option{
-		Debug:   false,
+		Debug:   scrcpy.MinLevel,
 		BitRate: 8000000,
 		MaxSize: 0,
 		Port:    27183,

@@ -4,7 +4,34 @@ import (
 	"fmt"
 )
 
-var debugOpt = false
+type DebugLevel int
+
+const (
+	MinLevel DebugLevel = iota
+	Error
+	Warn
+	Debug
+	Info
+	MaxLevel
+)
+
+func (dl DebugLevel) Debug() bool {
+	return dl >= Debug
+}
+
+func (dl DebugLevel) Info() bool {
+	return dl >= Info
+}
+
+func (dl DebugLevel) Warn() bool {
+	return dl >= Warn
+}
+
+func (dl DebugLevel) Error() bool {
+	return dl >= Error
+}
+
+var debugOpt = MinLevel
 
 type size struct {
 	width  uint16

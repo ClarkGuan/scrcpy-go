@@ -13,7 +13,7 @@ type Option struct {
 	Port       int
 	MaxSize    int
 	BitRate    int
-	Debug      bool
+	Debug      DebugLevel
 	KeyMap     map[int]*Point
 	CtrlKeyMap map[int]*Point
 }
@@ -49,7 +49,7 @@ func Main(opt *Option) (err error) {
 	if deviceName, screenSize, err = svr.ReadDeviceInfo(); err != nil {
 		return
 	}
-	if debugOpt {
+	if debugOpt.Debug() {
 		log.Printf("device name: %s, screen %v\n", deviceName, screenSize)
 	}
 

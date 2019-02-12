@@ -220,7 +220,7 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 			} else {
 				if ch.keyState[FireKeyCode] == nil {
 					ch.keyState[FireKeyCode] = fingers.GetId()
-					if debugOpt {
+					if debugOpt.Debug() {
 						log.Println("按下开火键")
 					}
 					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
@@ -252,7 +252,7 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 				b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 				fingers.Recycle(ch.keyState[FireKeyCode])
 				ch.keyState[FireKeyCode] = nil
-				if debugOpt {
+				if debugOpt.Debug() {
 					log.Println("松开开火键")
 				}
 				return b, e

@@ -109,7 +109,7 @@ func (s *screen) InitRendering(deviceName string, frameSize size) (err error) {
 		s.Close()
 		return
 	}
-	if debugOpt {
+	if debugOpt.Debug() {
 		log.Printf("Initial texture: %d, %d", frameSize.width, frameSize.height)
 	}
 	if s.texture, err = s.renderer.CreateTexture(sdl.PIXELFORMAT_YV12, sdl.TEXTUREACCESS_STREAMING, int32(frameSize.width), int32(frameSize.height)); err != nil {
@@ -154,7 +154,7 @@ func (s *screen) prepareForFrame(newFrameSize size) (err error) {
 		targetSize = getOptimalSize(targetSize, newFrameSize)
 		s.window.SetSize(int32(targetSize.width), int32(targetSize.height))
 		s.frameSize = newFrameSize
-		if debugOpt {
+		if debugOpt.Debug() {
 			log.Printf("New texture: %d, %d\n", newFrameSize.width, newFrameSize.height)
 		}
 		if s.texture, err = s.renderer.CreateTexture(sdl.PIXELFORMAT_YV12, sdl.TEXTUREACCESS_STREAMING, int32(newFrameSize.width), int32(newFrameSize.height)); err != nil {

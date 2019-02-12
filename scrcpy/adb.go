@@ -59,11 +59,11 @@ func adbExecAsync(serial string, params ...string) (*exec.Cmd, error) {
 	args = append(args, params...)
 
 	adbCmdOnce.Do(getAdbCommand)
-	if debugOpt {
+	if debugOpt.Debug() {
 		log.Printf("执行 %s %s\n", adbCmd, strings.Join(args, " "))
 	}
 	cmd := exec.Command(adbCmd, args...)
-	if debugOpt {
+	if debugOpt.Debug() {
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
 	}
