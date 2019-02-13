@@ -2,9 +2,9 @@ package scrcpy
 
 import (
 	"log"
+	"path/filepath"
 	"time"
 
-	"github.com/ClarkGuan/go-sdl2/img"
 	"github.com/ClarkGuan/go-sdl2/sdl"
 )
 
@@ -38,21 +38,45 @@ type controlHandler struct {
 	doubleHit           bool
 	*continuousFire
 
-	doubleHitTexture  sdl.Texture
-	doubleHitPosition sdl.Rect
+	font                        *Font
+	doubleHitEnableTexture      sdl.Texture
+	doubleHitEnableTextureSize  sdl.Rect
+	doubleHitDisableTexture     sdl.Texture
+	doubleHitDisableTextureSize sdl.Rect
 }
 
 func (ch *controlHandler) Init(r sdl.Renderer) {
-	ch.doubleHitTexture, _ = img.LoadTexture(r, "连击模式.png")
-	ch.doubleHitPosition = sdl.Rect{50, 50, 411, 93}
+	if ch.font == nil {
+		ch.font, _ = OpenFont(filepath.Join(sdl.GetBasePath(), "YaHei.Consolas.1.12.ttf"), 25)
+	}
+	if ch.font != nil {
+		if surface, _ := ch.font.GetTextSurface("连击模式：启用", sdl.Color{}); surface != nil {
+			ch.doubleHitEnableTexture, _ = r.CreateTextureFromSurface(surface)
+			surface.Free()
+			ch.doubleHitEnableTextureSize = getTextureSize(ch.doubleHitEnableTexture, 50, 50)
+		}
+		if surface, _ := ch.font.GetTextSurface("连接模式：未启用", sdl.Color{}); surface != nil {
+			ch.doubleHitDisableTexture, _ = r.CreateTextureFromSurface(surface)
+			surface.Free()
+			ch.doubleHitDisableTextureSize = getTextureSize(ch.doubleHitDisableTexture, 50, 50)
+		}
+	}
+
+}
+
+func getTextureSize(t sdl.Texture, startX, startY int32) sdl.Rect {
+	_, _, w, h, _ := t.Query()
+	return sdl.Rect{startX, startY, w, h}
 }
 
 func (ch *controlHandler) Render(r sdl.Renderer) {
-	if ch.doubleHitTexture != 0 {
-		if ch.doubleHit {
-			r.Copy(ch.doubleHitTexture, &sdl.Rect{1, 1, 137, 31}, &ch.doubleHitPosition)
-		} else {
-			r.Copy(ch.doubleHitTexture, &sdl.Rect{1, 32, 137, 31}, &ch.doubleHitPosition)
+	if ch.doubleHit {
+		if ch.doubleHitEnableTexture != 0 {
+			r.Copy(ch.doubleHitEnableTexture, nil, &ch.doubleHitEnableTextureSize)
+		}
+	} else {
+		if ch.doubleHitDisableTexture != 0 {
+			r.Copy(ch.doubleHitDisableTexture, nil, &ch.doubleHitDisableTextureSize)
 		}
 	}
 }
