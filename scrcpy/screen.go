@@ -112,7 +112,7 @@ func (s *screen) InitRendering(deviceName string, frameSize size) (err error) {
 	if debugOpt.Debug() {
 		log.Printf("Initial texture: %d, %d", frameSize.width, frameSize.height)
 	}
-	if s.texture, err = s.renderer.CreateTexture(sdl.PIXELFORMAT_YV12, sdl.TEXTUREACCESS_STREAMING, int32(frameSize.width), int32(frameSize.height)); err != nil {
+	if err = s.createTexture(frameSize.width, frameSize.height); err != nil {
 		s.Close()
 		return
 	}
@@ -157,7 +157,7 @@ func (s *screen) prepareForFrame(newFrameSize size) (err error) {
 		if debugOpt.Debug() {
 			log.Printf("New texture: %d, %d\n", newFrameSize.width, newFrameSize.height)
 		}
-		if s.texture, err = s.renderer.CreateTexture(sdl.PIXELFORMAT_YV12, sdl.TEXTUREACCESS_STREAMING, int32(newFrameSize.width), int32(newFrameSize.height)); err != nil {
+		if err = s.createTexture(newFrameSize.width, newFrameSize.height); err != nil {
 			log.Printf("Could not create texture: %v\n", err)
 			return
 		}
@@ -170,4 +170,10 @@ func (s *screen) render() {
 	s.renderer.Clear()
 	s.renderer.Copy(s.texture, nil, nil)
 	s.renderer.Present()
+}
+
+func (s *screen) createTexture(w, h uint16) (err error) {
+	// 在 MacOS 上可以创建 NV12 的 Texture 进行硬件加速
+	s.texture, err = s.renderer.CreateTexture(sdl.PIXELFORMAT_YV12, sdl.TEXTUREACCESS_STREAMING, int32(w), int32(h))
+	return
 }
