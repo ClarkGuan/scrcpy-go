@@ -44,15 +44,15 @@ type controlHandler struct {
 
 func (ch *controlHandler) Init(r *sdl.Renderer) {
 	ch.doubleHitTexture, _ = img.LoadTexture(r, "连击模式.png")
-	ch.doubleHitPosition = sdl.Rect{50, 50, 136, 31}
+	ch.doubleHitPosition = sdl.Rect{50, 50, 411, 93}
 }
 
 func (ch *controlHandler) Render(r *sdl.Renderer) {
 	if ch.doubleHitTexture != nil {
 		if ch.doubleHit {
-			r.Copy(ch.doubleHitTexture, &sdl.Rect{1, 1, 136, 31}, &ch.doubleHitPosition)
+			r.Copy(ch.doubleHitTexture, &sdl.Rect{1, 1, 137, 31}, &ch.doubleHitPosition)
 		} else {
-			r.Copy(ch.doubleHitTexture, &sdl.Rect{1, 32, 136, 31}, &ch.doubleHitPosition)
+			r.Copy(ch.doubleHitTexture, &sdl.Rect{1, 32, 137, 31}, &ch.doubleHitPosition)
 		}
 	}
 }
