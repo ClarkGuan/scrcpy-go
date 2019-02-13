@@ -3,7 +3,7 @@ package scrcpy
 import (
 	"log"
 
-	"github.com/veandco/go-sdl2/sdl"
+	"github.com/ClarkGuan/go-sdl2/sdl"
 )
 
 const (
@@ -86,9 +86,9 @@ func getInitialOptimalSize(frameSize size) size {
 }
 
 type screen struct {
-	window    *sdl.Window
-	renderer  *sdl.Renderer
-	texture   *sdl.Texture
+	window    sdl.Window
+	renderer  sdl.Renderer
+	texture   sdl.Texture
 	frameSize size
 	hasFrame  bool
 	Renderers []Renderer
@@ -122,17 +122,17 @@ func (s *screen) InitRendering(deviceName string, frameSize size) (err error) {
 }
 
 func (s *screen) Close() error {
-	if s.texture != nil {
+	if s.texture != 0 {
 		s.texture.Destroy()
-		s.texture = nil
+		s.texture = 0
 	}
-	if s.renderer != nil {
+	if s.renderer != 0 {
 		s.renderer.Destroy()
-		s.renderer = nil
+		s.renderer = 0
 	}
-	if s.window != nil {
+	if s.window != 0 {
 		s.window.Destroy()
-		s.window = nil
+		s.window = 0
 	}
 	return nil
 }
@@ -194,6 +194,6 @@ func (s *screen) addRendererFunc(r Renderer) {
 }
 
 type Renderer interface {
-	Init(r *sdl.Renderer)
-	Render(r *sdl.Renderer)
+	Init(r sdl.Renderer)
+	Render(r sdl.Renderer)
 }

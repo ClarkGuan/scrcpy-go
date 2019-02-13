@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/veandco/go-sdl2/img"
-	"github.com/veandco/go-sdl2/sdl"
+	"github.com/ClarkGuan/go-sdl2/img"
+	"github.com/ClarkGuan/go-sdl2/sdl"
 )
 
 const (
@@ -38,17 +38,17 @@ type controlHandler struct {
 	doubleHit           bool
 	*continuousFire
 
-	doubleHitTexture  *sdl.Texture
+	doubleHitTexture  sdl.Texture
 	doubleHitPosition sdl.Rect
 }
 
-func (ch *controlHandler) Init(r *sdl.Renderer) {
+func (ch *controlHandler) Init(r sdl.Renderer) {
 	ch.doubleHitTexture, _ = img.LoadTexture(r, "连击模式.png")
 	ch.doubleHitPosition = sdl.Rect{50, 50, 411, 93}
 }
 
-func (ch *controlHandler) Render(r *sdl.Renderer) {
-	if ch.doubleHitTexture != nil {
+func (ch *controlHandler) Render(r sdl.Renderer) {
+	if ch.doubleHitTexture != 0 {
 		if ch.doubleHit {
 			r.Copy(ch.doubleHitTexture, &sdl.Rect{1, 1, 137, 31}, &ch.doubleHitPosition)
 		} else {

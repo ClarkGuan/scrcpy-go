@@ -4,7 +4,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/veandco/go-sdl2/sdl"
+	"github.com/ClarkGuan/go-sdl2/sdl"
 )
 
 type Direction int

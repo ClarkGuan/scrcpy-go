@@ -20,7 +20,7 @@ import (
 	"sync"
 	"unsafe"
 
-	"github.com/veandco/go-sdl2/sdl"
+	"github.com/ClarkGuan/go-sdl2/sdl"
 )
 
 const eventNewFrame = sdl.USEREVENT + 1
