@@ -22,7 +22,6 @@ const eventDirectionEvent = sdl.USEREVENT + 4
 
 type controlHandler struct {
 	controller Controller
-	screen     *screen
 	set        mouseEventSet
 
 	keyState map[int]*int
@@ -37,16 +36,38 @@ type controlHandler struct {
 	timer               map[uint32]*time.Timer
 	doubleHit           bool
 	*continuousFire
+
+	numberTexture  *sdl.Texture
+	numberPosition sdl.Rect
 }
 
-func newControlHandler(controller Controller, screen *screen, keyMap, ctrlKeyMap map[int]*Point) *controlHandler {
+func (ch *controlHandler) Init(r *sdl.Renderer) {
+	ch.numberTexture, _ = loadImage(r, "数字红.bmp")
+	ch.numberPosition = sdl.Rect{50, 50, 50, 100}
+}
+
+func (ch *controlHandler) Render(r *sdl.Renderer) {
+	if ch.numberTexture != nil {
+		if ch.doubleHit {
+			ch.displayNumber(r, 1)
+		} else {
+			ch.displayNumber(r, 0)
+		}
+	}
+}
+
+func (ch *controlHandler) displayNumber(r *sdl.Renderer, i int) {
+	i %= 10
+	r.Copy(ch.numberTexture, &sdl.Rect{int32(50 * i), 0, 50, 100}, &ch.numberPosition)
+}
+
+func newControlHandler(controller Controller, keyMap, ctrlKeyMap map[int]*Point) *controlHandler {
 	ch := controlHandler{controller: controller}
 	controller.Register(&ch)
 	ch.keyState = make(map[int]*int)
 	ch.ctrlKeyState = make(map[int]*int)
 	ch.keyMap = keyMap
 	ch.ctrlKeyMap = ctrlKeyMap
-	ch.screen = screen
 	ch.directionController.keyMap = keyMap
 	// 默认开启连发模式
 	ch.doubleHit = false

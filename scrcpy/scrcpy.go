@@ -75,8 +75,9 @@ func Main(opt *Option) (err error) {
 	fh := &frameHandler{screen: &screen, frames: &frames}
 	looper.Register(fh)
 
-	ch := newControlHandler(controller, &screen, opt.KeyMap, opt.CtrlKeyMap)
+	ch := newControlHandler(controller, opt.KeyMap, opt.CtrlKeyMap)
 	looper.Register(ch)
+	screen.addRendererFunc(ch)
 
 	if err = looper.Loop(); err != nil {
 		log.Println(err)

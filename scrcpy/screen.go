@@ -91,6 +91,8 @@ type screen struct {
 	texture   *sdl.Texture
 	frameSize size
 	hasFrame  bool
+	Renderers []Renderer
+	initFlag  bool
 }
 
 func (s *screen) InitRendering(deviceName string, frameSize size) (err error) {
@@ -167,8 +169,17 @@ func (s *screen) prepareForFrame(newFrameSize size) (err error) {
 }
 
 func (s *screen) render() {
+	if !s.initFlag {
+		s.initFlag = true
+		for _, r := range s.Renderers {
+			r.Init(s.renderer)
+		}
+	}
 	s.renderer.Clear()
 	s.renderer.Copy(s.texture, nil, nil)
+	for _, r := range s.Renderers {
+		r.Render(s.renderer)
+	}
 	s.renderer.Present()
 }
 
@@ -176,4 +187,13 @@ func (s *screen) createTexture(w, h uint16) (err error) {
 	// 在 MacOS 上可以创建 NV12 的 Texture 进行硬件加速
 	s.texture, err = s.renderer.CreateTexture(sdl.PIXELFORMAT_YV12, sdl.TEXTUREACCESS_STREAMING, int32(w), int32(h))
 	return
+}
+
+func (s *screen) addRendererFunc(r Renderer) {
+	s.Renderers = append(s.Renderers, r)
+}
+
+type Renderer interface {
+	Init(r *sdl.Renderer)
+	Render(r *sdl.Renderer)
 }
