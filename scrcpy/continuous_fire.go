@@ -9,13 +9,23 @@ type continuousFire struct {
 	animator
 	stopFlag int32
 	Point
-	state int
-	id    *int
+	state    int
+	id       *int
+	interval time.Duration
 }
 
-func (cf *continuousFire) Start(c Controller) {
+func (cf *continuousFire) Start(c Controller, interval time.Duration) {
 	cf.animator.InProgress = cf.inProgress
+	cf.SetInterval(interval)
 	cf.animator.Start(c)
+}
+
+func (cf *continuousFire) SetInterval(interval time.Duration) {
+	if interval < 60*time.Millisecond {
+		cf.interval = 60 * time.Millisecond
+	} else {
+		cf.interval = interval
+	}
 }
 
 func (cf *continuousFire) inProgress(data interface{}) time.Duration {
@@ -34,7 +44,7 @@ func (cf *continuousFire) inProgress(data interface{}) time.Duration {
 			fingers.Recycle(cf.id)
 			cf.id = nil
 			cf.state++
-			return 250 * time.Millisecond
+			return cf.interval
 		}
 		panic("can't reach here")
 	} else {
