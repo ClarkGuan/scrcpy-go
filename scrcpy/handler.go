@@ -233,7 +233,7 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 				if ch.keyState[mainPointerKeyCode] != nil {
 					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
 				} else if ch.continuousFire != nil {
-					ch.visionMoving(event, 2)
+					ch.visionMoving(event, 0)
 					return true, nil
 				}
 				//else if ch.keyState[FireKeyCode] != nil {
@@ -284,10 +284,10 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 				if ch.continuousFire == nil {
 					ch.continuousFire = new(continuousFire)
 					ch.continuousFire.Point = *ch.keyMap[FireKeyCode]
-					ch.continuousFire.Start(ch.controller, 120*time.Millisecond)
+					ch.continuousFire.Start(ch.controller, 60*time.Millisecond)
 					return true, nil
 				} else {
-					ch.continuousFire.SetInterval(120 * time.Millisecond)
+					ch.continuousFire.SetInterval(60 * time.Millisecond)
 				}
 				//if ch.keyState[FireKeyCode] == nil {
 				//	ch.keyState[FireKeyCode] = fingers.GetId()
