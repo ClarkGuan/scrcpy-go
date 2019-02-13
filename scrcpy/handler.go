@@ -1,6 +1,7 @@
 package scrcpy
 
 import (
+	"github.com/veandco/go-sdl2/img"
 	"log"
 	"time"
 
@@ -37,28 +38,23 @@ type controlHandler struct {
 	doubleHit           bool
 	*continuousFire
 
-	numberTexture  *sdl.Texture
-	numberPosition sdl.Rect
+	doubleHitTexture  *sdl.Texture
+	doubleHitPosition sdl.Rect
 }
 
 func (ch *controlHandler) Init(r *sdl.Renderer) {
-	ch.numberTexture, _ = loadImage(r, "数字红.bmp")
-	ch.numberPosition = sdl.Rect{50, 50, 50, 100}
+	ch.doubleHitTexture, _ = img.LoadTexture(r, "连击模式.png")
+	ch.doubleHitPosition = sdl.Rect{50, 50, 136, 31}
 }
 
 func (ch *controlHandler) Render(r *sdl.Renderer) {
-	if ch.numberTexture != nil {
+	if ch.doubleHitTexture != nil {
 		if ch.doubleHit {
-			ch.displayNumber(r, 1)
+			r.Copy(ch.doubleHitTexture, &sdl.Rect{1, 1, 136, 31}, &ch.doubleHitPosition)
 		} else {
-			ch.displayNumber(r, 0)
+			r.Copy(ch.doubleHitTexture, &sdl.Rect{1, 32, 136, 31}, &ch.doubleHitPosition)
 		}
 	}
-}
-
-func (ch *controlHandler) displayNumber(r *sdl.Renderer, i int) {
-	i %= 10
-	r.Copy(ch.numberTexture, &sdl.Rect{int32(50 * i), 0, 50, 100}, &ch.numberPosition)
 }
 
 func newControlHandler(controller Controller, keyMap, ctrlKeyMap map[int]*Point) *controlHandler {
