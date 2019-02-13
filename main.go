@@ -51,7 +51,7 @@ func main() {
 			sdl.K_x:              {2014, 450},
 		},
 		CtrlKeyMap: map[int]*scrcpy.Point{
-			sdl.K_1: {1742, 463},
+			sdl.K_1: {1794, 457},
 			sdl.K_2: {1868, 460},
 			sdl.K_3: {1755, 576},
 			sdl.K_4: {1855, 573},

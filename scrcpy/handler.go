@@ -16,7 +16,7 @@ const (
 	BackKeyCode
 )
 
-const mouseAccuracy = .25
+const mouseAccuracy = .085
 const mouseVisionDelay = time.Millisecond * 500
 const eventVisionEventUp = sdl.USEREVENT + 3
 const eventDirectionEvent = sdl.USEREVENT + 4
@@ -218,7 +218,7 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 				if ch.keyState[mainPointerKeyCode] != nil {
 					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
 				} else if ch.keyState[FireKeyCode] != nil {
-					ch.visionMoving(event, 0)
+					ch.visionMoving(event, 2)
 					b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 					fingers.Recycle(ch.keyState[FireKeyCode])
 					ch.keyState[FireKeyCode] = nil
