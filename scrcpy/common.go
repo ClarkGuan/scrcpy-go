@@ -7,31 +7,31 @@ import (
 type DebugLevel int
 
 const (
-	MinLevel DebugLevel = iota
-	Error
-	Warn
-	Info
-	Debug
-	MaxLevel
+	DebugLevelMin DebugLevel = iota
+	DebugLevelError
+	DebugLevelWarn
+	DebugLevelInfo
+	DebugLevelDebug
+	DebugLevelMax
 )
 
 func (dl DebugLevel) Debug() bool {
-	return dl >= Debug
+	return dl >= DebugLevelDebug
 }
 
 func (dl DebugLevel) Info() bool {
-	return dl >= Info
+	return dl >= DebugLevelInfo
 }
 
 func (dl DebugLevel) Warn() bool {
-	return dl >= Warn
+	return dl >= DebugLevelWarn
 }
 
 func (dl DebugLevel) Error() bool {
-	return dl >= Error
+	return dl >= DebugLevelError
 }
 
-var debugOpt = MinLevel
+var debugOpt = DebugLevelMin
 
 type size struct {
 	width  uint16
