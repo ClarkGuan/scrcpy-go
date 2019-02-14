@@ -35,33 +35,43 @@ type controlHandler struct {
 
 	directionController directionController
 	timer               map[uint32]*time.Timer
-	doubleHit           bool
+	doubleHit           int
 	*continuousFire
 
 	font                        *Font
-	doubleHitEnableTexture      sdl.Texture
-	doubleHitEnableTextureSize  sdl.Rect
+	doubleHitFastTexture        sdl.Texture
+	doubleHitFastTextureSize    sdl.Rect
+	doubleHitSlowTexture        sdl.Texture
+	doubleHitSlowTextureSize    sdl.Rect
 	doubleHitDisableTexture     sdl.Texture
 	doubleHitDisableTextureSize sdl.Rect
 }
 
 func (ch *controlHandler) Init(r sdl.Renderer) {
+	var err error
 	if ch.font == nil {
-		ch.font, _ = OpenFont(filepath.Join(sdl.GetBasePath(), "YaHei.Consolas.1.12.ttf"), 25)
-	}
-	if ch.font != nil {
-		if surface, _ := ch.font.GetTextSurface("连击模式：启用", sdl.Color{}); surface != nil {
-			ch.doubleHitEnableTexture, _ = r.CreateTextureFromSurface(surface)
-			surface.Free()
-			ch.doubleHitEnableTextureSize = getTextureSize(ch.doubleHitEnableTexture, 50, 50)
-		}
-		if surface, _ := ch.font.GetTextSurface("连接模式：未启用", sdl.Color{}); surface != nil {
-			ch.doubleHitDisableTexture, _ = r.CreateTextureFromSurface(surface)
-			surface.Free()
-			ch.doubleHitDisableTextureSize = getTextureSize(ch.doubleHitDisableTexture, 50, 50)
+		if ch.font, err = OpenFont(filepath.Join(sdl.GetBasePath(), "YaHei.Consolas.1.12.ttf"), 25); err != nil {
+			panic(err)
 		}
 	}
 
+	ch.doubleHitFastTexture, ch.doubleHitFastTextureSize = ch.initTextures(r, "连击模式：快")
+	ch.doubleHitSlowTexture, ch.doubleHitSlowTextureSize = ch.initTextures(r, "连击模式：慢")
+	ch.doubleHitDisableTexture, ch.doubleHitDisableTextureSize = ch.initTextures(r, "连击模式：关闭")
+}
+
+func (ch *controlHandler) initTextures(r sdl.Renderer, text string) (sdl.Texture, sdl.Rect) {
+	if surface, err := ch.font.GetTextSurface(text, sdl.Color{}); err != nil {
+		panic(err)
+	} else {
+		if texture, err := r.CreateTextureFromSurface(surface); err != nil {
+			panic(err)
+		} else {
+			surface.Free()
+			size := getTextureSize(texture, 50, 50)
+			return texture, size
+		}
+	}
 }
 
 func getTextureSize(t sdl.Texture, startX, startY int32) sdl.Rect {
@@ -70,14 +80,18 @@ func getTextureSize(t sdl.Texture, startX, startY int32) sdl.Rect {
 }
 
 func (ch *controlHandler) Render(r sdl.Renderer) {
-	if ch.doubleHit {
-		if ch.doubleHitEnableTexture != 0 {
-			r.Copy(ch.doubleHitEnableTexture, nil, &ch.doubleHitEnableTextureSize)
-		}
-	} else {
-		if ch.doubleHitDisableTexture != 0 {
-			r.Copy(ch.doubleHitDisableTexture, nil, &ch.doubleHitDisableTextureSize)
-		}
+	switch ch.doubleHit {
+	case 0:
+		// 关闭
+		r.Copy(ch.doubleHitDisableTexture, nil, &ch.doubleHitDisableTextureSize)
+
+	case 1:
+		// 快
+		r.Copy(ch.doubleHitFastTexture, nil, &ch.doubleHitFastTextureSize)
+
+	case 2:
+		// 慢
+		r.Copy(ch.doubleHitSlowTexture, nil, &ch.doubleHitSlowTextureSize)
 	}
 }
 
@@ -89,8 +103,7 @@ func newControlHandler(controller Controller, keyMap, ctrlKeyMap map[int]*Point)
 	ch.keyMap = keyMap
 	ch.ctrlKeyMap = ctrlKeyMap
 	ch.directionController.keyMap = keyMap
-	// 默认开启连发模式
-	ch.doubleHit = false
+	ch.doubleHit = 0
 	return &ch
 }
 
@@ -209,42 +222,57 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 	}
 }
 
+func (ch *controlHandler) stopContinuousFire() {
+	if ch.continuousFire != nil {
+		ch.continuousFire.Stop()
+		ch.continuousFire = nil
+	}
+}
+
+func (ch *controlHandler) startContinuousFire(interval time.Duration) {
+	if ch.continuousFire == nil {
+		ch.continuousFire = new(continuousFire)
+		ch.continuousFire.Point = *ch.keyMap[FireKeyCode]
+		ch.continuousFire.Start(ch.controller, interval)
+	} else {
+		ch.continuousFire.SetInterval(interval)
+	}
+}
+
+func (ch *controlHandler) startMainPointerMotion(x, y int32) {
+	if ch.keyState[mainPointerKeyCode] == nil {
+		ch.keyState[mainPointerKeyCode] = fingers.GetId()
+		ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[mainPointerKeyCode], Point{uint16(x), uint16(y)})
+	} else {
+		panic("main pointer state error")
+	}
+}
+
+func (ch *controlHandler) continueMainPointerMotion(x, y int32) {
+	if ch.keyState[mainPointerKeyCode] != nil {
+		ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(x), uint16(y)})
+	} else {
+		panic("main pointer state error")
+	}
+}
+
+func (ch *controlHandler) stopMainPointerMotion(x, y int32) {
+	if ch.keyState[mainPointerKeyCode] != nil {
+		ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[mainPointerKeyCode], Point{uint16(x), uint16(y)})
+		fingers.Recycle(ch.keyState[mainPointerKeyCode])
+		ch.keyState[mainPointerKeyCode] = nil
+	}
+}
+
 func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, error) {
 	if sdl.GetRelativeMouseMode() {
-		if event.State != sdl.BUTTON_LEFT {
-			return ch.visionMoving(event, 0)
-		} else {
-			if ch.doubleHit {
-				if ch.keyState[mainPointerKeyCode] != nil {
-					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-				} else if ch.continuousFire != nil {
-					ch.visionMoving(event, 0)
-					return true, nil
-				}
-				//else if ch.keyState[FireKeyCode] != nil {
-				//	ch.visionMoving(event, 2)
-				//	b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
-				//	fingers.Recycle(ch.keyState[FireKeyCode])
-				//	ch.keyState[FireKeyCode] = nil
-				//	return b, e
-				//}
-
-			} else {
-				if ch.keyState[mainPointerKeyCode] != nil {
-					return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-				} else if ch.continuousFire != nil {
-					ch.visionMoving(event, 0)
-					return true, nil
-				}
-				//else if ch.keyState[FireKeyCode] != nil {
-				//	ch.visionMoving(event, 0)
-				//	return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
-				//} else {
-				//	panic("fire pointer state error")
-				//}
-			}
-		}
+		// 无论如何，停止 mainPointer 的事件分发
+		ch.stopMainPointerMotion(event.X, event.Y)
+		return ch.visionMoving(event, 0)
 	} else {
+		// 无论如何，关闭连击宏操作
+		ch.stopContinuousFire()
+
 		if ch.keyState[VisionKeyCode] != nil {
 			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
@@ -252,16 +280,9 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 			return b, e
 		}
 
-		if event.State != sdl.BUTTON_LEFT {
-			return true, nil
-		} else {
-			if ch.keyState[mainPointerKeyCode] != nil {
-				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-			} else {
-				panic("main pointer state error")
-			}
+		if event.State == sdl.BUTTON_LEFT {
+			ch.continueMainPointerMotion(event.X, event.Y)
 		}
-
 	}
 
 	return true, nil
@@ -270,56 +291,56 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bool, error) {
 	// 鼠标左键
 	if event.Button == sdl.BUTTON_LEFT {
+		// 无论如何，关闭连击宏操作
+		ch.stopContinuousFire()
+
 		if sdl.GetRelativeMouseMode() {
-			if ch.doubleHit {
-				if ch.continuousFire == nil {
-					ch.continuousFire = new(continuousFire)
-					ch.continuousFire.Point = *ch.keyMap[FireKeyCode]
-					ch.continuousFire.Start(ch.controller, 250*time.Millisecond)
-					return true, nil
-				} else {
-					ch.continuousFire.SetInterval(250 * time.Millisecond)
+			// 无论如何，停止 mainPointer 的事件分发
+			ch.stopMainPointerMotion(event.X, event.Y)
+
+			switch ch.doubleHit {
+			case 0:
+				if ch.keyState[FireKeyCode] == nil {
+					ch.keyState[FireKeyCode] = fingers.GetId()
+					if debugOpt.Debug() {
+						log.Println("按下开火键")
+					}
+					ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 				}
-			} else {
-				if ch.continuousFire == nil {
-					ch.continuousFire = new(continuousFire)
-					ch.continuousFire.Point = *ch.keyMap[FireKeyCode]
-					ch.continuousFire.Start(ch.controller, 60*time.Millisecond)
-					return true, nil
-				} else {
-					ch.continuousFire.SetInterval(60 * time.Millisecond)
+				if debugOpt.Debug() {
+					log.Println("正常开火")
 				}
-				//if ch.keyState[FireKeyCode] == nil {
-				//	ch.keyState[FireKeyCode] = fingers.GetId()
-				//	if debugOpt.Debug() {
-				//		log.Println("按下开火键")
-				//	}
-				//	return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
-				//}
+
+			case 1:
+				ch.startContinuousFire(60 * time.Millisecond)
+				if debugOpt.Debug() {
+					log.Println("连击快速")
+				}
+
+			case 2:
+				ch.startContinuousFire(250 * time.Millisecond)
+				if debugOpt.Debug() {
+					log.Println("连击慢速")
+				}
 			}
 		} else {
-			if ch.keyState[mainPointerKeyCode] == nil {
-				ch.keyState[mainPointerKeyCode] = fingers.GetId()
-				return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-			} else {
-				panic("main pointer state error")
-			}
+			ch.startMainPointerMotion(event.X, event.Y)
 		}
 	}
 
-	return false, nil
+	return true, nil
 }
 
 func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool, error) {
 	// 鼠标左键
 	if event.Button == sdl.BUTTON_LEFT {
+		// 无论如何，关闭连击宏操作
+		ch.stopContinuousFire()
+		// 无论如何，停止 mainPointer 的事件分发
+		ch.stopMainPointerMotion(event.X, event.Y)
+
 		if sdl.GetRelativeMouseMode() {
-			if ch.keyState[mainPointerKeyCode] != nil {
-				b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-				fingers.Recycle(ch.keyState[mainPointerKeyCode])
-				ch.keyState[mainPointerKeyCode] = nil
-				return b, e
-			} else if ch.keyState[FireKeyCode] != nil {
+			if ch.keyState[FireKeyCode] != nil {
 				b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[FireKeyCode], *ch.keyMap[FireKeyCode])
 				fingers.Recycle(ch.keyState[FireKeyCode])
 				ch.keyState[FireKeyCode] = nil
@@ -327,33 +348,16 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 					log.Println("松开开火键")
 				}
 				return b, e
-			} else if ch.continuousFire != nil {
-				ch.continuousFire.Stop()
-				ch.continuousFire = nil
-				return true, nil
-			}
-		} else {
-			if ch.keyState[mainPointerKeyCode] != nil {
-				b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[mainPointerKeyCode], Point{uint16(event.X), uint16(event.Y)})
-				fingers.Recycle(ch.keyState[mainPointerKeyCode])
-				ch.keyState[mainPointerKeyCode] = nil
-				return b, e
-			} else if ch.continuousFire != nil {
-				ch.continuousFire.Stop()
-				ch.continuousFire = nil
-				return true, nil
-			} else {
-				panic("main pointer state error")
 			}
 		}
 	} else if event.Button == sdl.BUTTON_RIGHT {
-		ch.doubleHit = !ch.doubleHit
+		ch.doubleHit = (ch.doubleHit + 1) % 3
 		if debugOpt.Debug() {
-			log.Printf("连击模式:%t\n", ch.doubleHit)
+			log.Printf("连击模式:%d\n", ch.doubleHit)
 		}
 	}
 
-	return false, nil
+	return true, nil
 }
 
 func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) {
@@ -427,9 +431,9 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			case sdl.K_x:
 				sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
 			case sdl.K_z:
-				ch.doubleHit = !ch.doubleHit
+				ch.doubleHit = 0
 				if debugOpt.Debug() {
-					log.Printf("连击模式:%t\n", ch.doubleHit)
+					log.Printf("连击模式:%d\n", ch.doubleHit)
 				}
 			}
 		}

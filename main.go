@@ -10,7 +10,7 @@ import (
 func main() {
 	log.Printf("SDL %d.%d.%d\n", sdl.MAJOR_VERSION, sdl.MINOR_VERSION, sdl.PATCHLEVEL)
 	option := scrcpy.Option{
-		Debug:   scrcpy.DebugLevelMin,
+		Debug:   scrcpy.DebugLevelDebug,
 		BitRate: 8000000,
 		MaxSize: 0,
 		Port:    27183,
