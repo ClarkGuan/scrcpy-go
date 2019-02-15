@@ -91,6 +91,10 @@ public final class Device {
             w = portrait ? minor : major;
             h = portrait ? major : minor;
         }
+
+        // TODO 使用 VideoToolBox 后计算的结果与之差值都是 8
+        w -= 8;
+        h -= 8;
         return new Size(w, h);
     }
 
