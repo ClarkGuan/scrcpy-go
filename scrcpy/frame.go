@@ -61,18 +61,18 @@ func (af avFrame) lineSize(i int) int {
 	return int(tmp.linesize[C.int(i)])
 }
 
-//func (af avFrame) copy(b []byte) []byte {
-//	buf1, buf2 := af.data(0), af.data(1)
-//	if buf1 == nil || buf2 == nil {
-//		return b
-//	}
-//	if len(b) < len(buf1)+len(buf2) {
-//		b = make([]byte, len(buf1)+len(buf2))
-//	}
-//	copy(b, buf1)
-//	copy(b[len(buf1):], buf2)
-//	return b
-//}
+func (af avFrame) copy(b []byte) []byte {
+	buf1, buf2 := af.data(0), af.data(1)
+	if buf1 == nil || buf2 == nil {
+		return b
+	}
+	if len(b) < len(buf1)+len(buf2) {
+		b = make([]byte, len(buf1)+len(buf2))
+	}
+	n := copy(b, buf1)
+	copy(b[n:], buf2) // FIXME 有概率会 crash，暂不知原因
+	return b
+}
 
 func (af avFrame) isEmpty() bool {
 	tmp := (*C.AVFrame)(unsafe.Pointer(af))
@@ -187,8 +187,8 @@ func goGetHardwareFrame() *C.AVFrame {
 func goAvHwframeTransferData() C.int {
 	d := gDecoder
 	if !d.decodingFrame.isEmpty() {
-		if d.decodingFrame.width() < d.hardwareFrame.width() ||
-			(d.decodingFrame.height() < d.hardwareFrame.height()) {
+		if d.decodingFrame.width() != d.hardwareFrame.width() ||
+			(d.decodingFrame.height() != d.hardwareFrame.height()) {
 			d.decodingFrame.free()
 			d.decodingFrame = avFrame(unsafe.Pointer(C.av_frame_alloc()))
 		}
@@ -235,11 +235,11 @@ func (s *screen) updateFrame(frames *frame) error {
 }
 
 func (s *screen) updateTexture(frame avFrame) error {
-	//s.bufs = frame.copy(s.bufs)
-	//if s.bufs == nil {
-	//	return nil
-	//}
-	return s.texture.Update(nil, frame.data(0), frame.lineSize(0))
+	s.bufs = frame.copy(s.bufs)
+	if s.bufs == nil {
+		return nil
+	}
+	return s.texture.Update(nil, s.bufs, frame.lineSize(0))
 }
 
 type frameHandler struct {

@@ -93,7 +93,7 @@ type screen struct {
 	hasFrame  bool
 	Renderers []Renderer
 	initFlag  bool
-	//bufs      []byte
+	bufs      []byte
 }
 
 func (s *screen) InitRendering(deviceName string, frameSize size) (err error) {
