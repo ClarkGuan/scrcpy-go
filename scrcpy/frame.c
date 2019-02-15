@@ -9,39 +9,40 @@
 int goReadPacket(void* p, void *buf, int size);
 void goPushFrame();
 void goNotifyStopped();
-AVFrame* goGetDecodingFrame();
+AVFrame* goGetHardwareFrame();
+int goAvHwframeTransferData();
 
 static int read_packet(void *opaque, uint8_t *buf, int buf_size) {
     return goReadPacket(opaque, (void *) buf, buf_size);
 }
 
-//static enum AVPixelFormat get_hw_format(AVCodecContext *ctx,
-//                                        const enum AVPixelFormat *pix_fmts)
-//{
-//    const enum AVPixelFormat *p;
-//
-//    for (p = pix_fmts; *p != -1; p++) {
-//        if (*p == AV_PIX_FMT_VIDEOTOOLBOX)
-//            return *p;
-//    }
-//
-//    fprintf(stderr, "Failed to get HW surface format\n");
-//    return AV_PIX_FMT_NONE;
-//}
-//
-//static int hw_decoder_init(AVCodecContext *ctx,
-//        AVBufferRef **hw_device_ctx,
-//        const enum AVHWDeviceType type)
-//{
-//    int err = 0;
-//    if ((err = av_hwdevice_ctx_create(hw_device_ctx, type,
-//                                      NULL, NULL, 0)) < 0) {
-//        return err;
-//    }
-//    ctx->hw_device_ctx = av_buffer_ref(*hw_device_ctx);
-//
-//    return err;
-//}
+static enum AVPixelFormat get_hw_format(AVCodecContext *ctx,
+                                        const enum AVPixelFormat *pix_fmts)
+{
+    const enum AVPixelFormat *p;
+
+    for (p = pix_fmts; *p != -1; p++) {
+        if (*p == AV_PIX_FMT_VIDEOTOOLBOX)
+            return *p;
+    }
+
+    fprintf(stderr, "Failed to get HW surface format\n");
+    return AV_PIX_FMT_NONE;
+}
+
+static int hw_decoder_init(AVCodecContext *ctx,
+        AVBufferRef **hw_device_ctx,
+        const enum AVHWDeviceType type)
+{
+    int err = 0;
+    if ((err = av_hwdevice_ctx_create(hw_device_ctx, type,
+                                      NULL, NULL, 0)) < 0) {
+        return err;
+    }
+    ctx->hw_device_ctx = av_buffer_ref(*hw_device_ctx);
+
+    return err;
+}
 
 int run_decoder() {
     AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -56,14 +57,14 @@ int run_decoder() {
         goto run_end;
     }
 
-//    enum AVHWDeviceType type = AV_HWDEVICE_TYPE_VIDEOTOOLBOX;
-//    AVBufferRef *hw_device_ctx = NULL;
-//    if (hw_decoder_init(codec_ctx, &hw_device_ctx, type) < 0) {
-//        fprintf(stderr, "Failed to create specified HW device\n");
-//        goto run_end;
-//    }
-//    codec_ctx->hw_device_ctx = hw_device_ctx;
-//    codec_ctx->get_format = get_hw_format;
+    enum AVHWDeviceType type = AV_HWDEVICE_TYPE_VIDEOTOOLBOX;
+    AVBufferRef *hw_device_ctx = NULL;
+    if (hw_decoder_init(codec_ctx, &hw_device_ctx, type) < 0) {
+        fprintf(stderr, "Failed to create specified HW device\n");
+        goto run_end;
+    }
+    codec_ctx->hw_device_ctx = hw_device_ctx;
+    codec_ctx->get_format = get_hw_format;
 
     if (avcodec_open2(codec_ctx, codec, NULL) < 0) {
         fprintf(stderr, "Could not open H.264 codec\n");
@@ -103,8 +104,6 @@ int run_decoder() {
     packet.data = NULL;
     packet.size = 0;
 
-//    AVFrame *tmp = av_frame_alloc();
-
     while (!av_read_frame(format_ctx, &packet)) {
 // the new decoding/encoding API has been introduced by:
 // <http://git.videolan.org/?p=ffmpeg.git;a=commitdiff;h=7fc329e2dd6226dfecaa4a1d7adf353bf2773726>
@@ -114,20 +113,18 @@ int run_decoder() {
             fprintf(stderr, "Could not send video packet: %d\n", ret);
             goto run_quit;
         }
-        ret = avcodec_receive_frame(codec_ctx, goGetDecodingFrame());
-//        ret = avcodec_receive_frame(codec_ctx, tmp);
+        ret = avcodec_receive_frame(codec_ctx, goGetHardwareFrame());
         if (!ret) {
-//            ret = av_hwframe_transfer_data(goGetDecodingFrame(), tmp, 0);
-//            if (!ret) {
+            ret = goAvHwframeTransferData();
+            if (!ret) {
                 // a frame was received
                 goPushFrame();
-//            } else {
-//                fprintf(stderr, "Could not receive video frame: %d\n", ret);
-//                av_packet_unref(&packet);
-//                goto run_quit;
-//            }
+            } else {
+                fprintf(stderr, "Could not receive video frame(1): %d\n", ret);
+                goto run_quit;
+            }
         } else if (ret != AVERROR(EAGAIN)) {
-            fprintf(stderr, "Could not receive video frame: %d\n", ret);
+            fprintf(stderr, "Could not receive video frame(2): %d\n", ret);
             av_packet_unref(&packet);
             goto run_quit;
         }

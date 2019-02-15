@@ -45,10 +45,14 @@ func (af avFrame) free() {
 
 func (af avFrame) data(i int) (ret []byte) {
 	tmp := (*C.AVFrame)(unsafe.Pointer(af))
+	if tmp.data[C.int(i)] == nil {
+		return nil
+	}
 	p := (*reflect.SliceHeader)(unsafe.Pointer(&ret))
 	p.Data = uintptr(unsafe.Pointer(tmp.data[C.int(i)]))
-	p.Len = 1
-	p.Cap = 1
+	lineSize := af.lineSize(i)
+	p.Len = lineSize * af.height()
+	p.Cap = p.Len
 	return
 }
 
@@ -57,8 +61,27 @@ func (af avFrame) lineSize(i int) int {
 	return int(tmp.linesize[C.int(i)])
 }
 
+//func (af avFrame) copy(b []byte) []byte {
+//	buf1, buf2 := af.data(0), af.data(1)
+//	if buf1 == nil || buf2 == nil {
+//		return b
+//	}
+//	if len(b) < len(buf1)+len(buf2) {
+//		b = make([]byte, len(buf1)+len(buf2))
+//	}
+//	copy(b, buf1)
+//	copy(b[len(buf1):], buf2)
+//	return b
+//}
+
+func (af avFrame) isEmpty() bool {
+	tmp := (*C.AVFrame)(unsafe.Pointer(af))
+	return tmp.data[0] == nil
+}
+
 type frame struct {
 	decodingFrame          avFrame
+	hardwareFrame          avFrame
 	renderingFrame         avFrame
 	renderingFrameConsumed bool
 	mutex                  sync.Mutex
@@ -69,8 +92,14 @@ func (f *frame) Init() error {
 		return errAVAlloc
 	}
 
+	if f.hardwareFrame = avFrame(unsafe.Pointer(C.av_frame_alloc())); f.hardwareFrame == 0 {
+		f.decodingFrame.free()
+		return errAVAlloc
+	}
+
 	if f.renderingFrame = avFrame(unsafe.Pointer(C.av_frame_alloc())); f.renderingFrame == 0 {
 		f.decodingFrame.free()
+		f.hardwareFrame.free()
 		return errAVAlloc
 	}
 
@@ -80,6 +109,7 @@ func (f *frame) Init() error {
 
 func (f *frame) Close() error {
 	f.decodingFrame.free()
+	f.hardwareFrame.free()
 	f.renderingFrame.free()
 	return nil
 }
@@ -147,10 +177,24 @@ func goNotifyStopped() {
 	sdl.PushEvent(&sdl.UserEvent{Type: eventDecoderStopped})
 }
 
-//export goGetDecodingFrame
-func goGetDecodingFrame() *C.AVFrame {
+//export goGetHardwareFrame
+func goGetHardwareFrame() *C.AVFrame {
 	d := gDecoder
-	return (*C.AVFrame)(unsafe.Pointer(d.decodingFrame))
+	return (*C.AVFrame)(unsafe.Pointer(d.hardwareFrame))
+}
+
+//export goAvHwframeTransferData
+func goAvHwframeTransferData() C.int {
+	d := gDecoder
+	if !d.decodingFrame.isEmpty() {
+		if d.decodingFrame.width() < d.hardwareFrame.width() ||
+			(d.decodingFrame.height() < d.hardwareFrame.height()) {
+			d.decodingFrame.free()
+			d.decodingFrame = avFrame(unsafe.Pointer(C.av_frame_alloc()))
+		}
+	}
+	return C.av_hwframe_transfer_data((*C.AVFrame)(unsafe.Pointer(d.decodingFrame)),
+		goGetHardwareFrame(), 0)
 }
 
 //export goReadPacket
@@ -191,10 +235,11 @@ func (s *screen) updateFrame(frames *frame) error {
 }
 
 func (s *screen) updateTexture(frame avFrame) error {
-	return s.texture.UpdateYUV(nil,
-		frame.data(0), frame.lineSize(0),
-		frame.data(1), frame.lineSize(1),
-		frame.data(2), frame.lineSize(2))
+	//s.bufs = frame.copy(s.bufs)
+	//if s.bufs == nil {
+	//	return nil
+	//}
+	return s.texture.Update(nil, frame.data(0), frame.lineSize(0))
 }
 
 type frameHandler struct {
