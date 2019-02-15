@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"sync"
 	"time"
+
+	"github.com/ClarkGuan/go-sdl2/sdl"
 )
 
 const (
@@ -242,19 +244,14 @@ func (svr *server) connectAndReadByte(timeout time.Duration) (err error) {
 
 func (svr *server) getLocalServerPath() string {
 	svr.localSvrPathOnce.Do(func() {
-		path := filepath.Join(filepath.Dir(os.Args[0]), "scrcpy-server.jar")
+		path := filepath.Join(sdl.GetBasePath(), "scrcpy-server.jar")
 		if _, err := os.Stat(path); err == nil {
 			svr.localSvrPath = path
 		} else {
-			path = filepath.Join(os.Getenv("GOPATH"), "bin", "scrcpy-server.jar")
-			if _, err := os.Stat(path); err == nil {
-				svr.localSvrPath = path
-			} else {
-				svr.localSvrPath = "/usr/local/share/scrcpy/scrcpy-server.jar"
-				svrEnv := os.Getenv("SCRCPY_SERVER_PATH")
-				if len(svrEnv) > 0 {
-					svr.localSvrPath = svrEnv
-				}
+			svr.localSvrPath = "/usr/local/share/scrcpy/scrcpy-server.jar"
+			svrEnv := os.Getenv("SCRCPY_SERVER_PATH")
+			if len(svrEnv) > 0 {
+				svr.localSvrPath = svrEnv
 			}
 		}
 	})
