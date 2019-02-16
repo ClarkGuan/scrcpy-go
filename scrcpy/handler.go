@@ -84,15 +84,15 @@ func getTextureSize(t sdl.Texture, startX, startY int32) sdl.Rect {
 
 func (ch *controlHandler) Render(r sdl.Renderer) {
 	switch ch.doubleHit {
-	case 0:
+	case -1:
 		// 关闭
 		r.Copy(ch.doubleHitDisableTexture, nil, &ch.doubleHitDisableTextureSize)
 
-	case 1:
+	case 0:
 		// 快
 		r.Copy(ch.doubleHitFastTexture, nil, &ch.doubleHitFastTextureSize)
 
-	case 2:
+	case 1:
 		// 慢
 		r.Copy(ch.doubleHitSlowTexture, nil, &ch.doubleHitSlowTextureSize)
 	}
@@ -315,7 +315,7 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 			ch.stopMainPointerMotion(event.X, event.Y)
 
 			switch ch.doubleHit {
-			case 0:
+			case -1:
 				if ch.keyState[FireKeyCode] == nil {
 					ch.keyState[FireKeyCode] = fingers.GetId()
 					if debugOpt.Debug() {
@@ -327,13 +327,13 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 					log.Println("正常开火")
 				}
 
-			case 1:
+			case 0:
 				ch.startContinuousFire(30 * time.Millisecond)
 				if debugOpt.Debug() {
 					log.Println("连击快速")
 				}
 
-			case 2:
+			case 1:
 				ch.startContinuousFire(200 * time.Millisecond)
 				if debugOpt.Debug() {
 					log.Println("连击慢速")
@@ -367,7 +367,7 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 			}
 		}
 	} else if event.Button == sdl.BUTTON_RIGHT {
-		ch.doubleHit = (ch.doubleHit + 1) % 3
+		ch.doubleHit = (ch.doubleHit + 1) % 2
 		if debugOpt.Debug() {
 			log.Printf("连击模式:%d\n", ch.doubleHit)
 		}
@@ -447,7 +447,7 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			case sdl.K_x:
 				sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
 			case sdl.K_z:
-				ch.doubleHit = 0
+				ch.doubleHit = -1
 				if debugOpt.Debug() {
 					log.Printf("连击模式:%d\n", ch.doubleHit)
 				}
