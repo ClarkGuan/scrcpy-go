@@ -33,6 +33,9 @@ type controlHandler struct {
 	ctrlKeyState map[int]*int
 	ctrlKeyMap   map[int]*Point
 
+	mouseKeyState map[uint8]*int
+	mouseKeyMap   map[uint8]*Point
+
 	visionCachePointer Point
 	wheelCachePointer  Point
 
@@ -98,13 +101,15 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 	}
 }
 
-func newControlHandler(controller Controller, keyMap, ctrlKeyMap map[int]*Point) *controlHandler {
+func newControlHandler(controller Controller, keyMap, ctrlKeyMap map[int]*Point, mouseKeyMap map[uint8]*Point) *controlHandler {
 	ch := controlHandler{controller: controller}
 	controller.Register(&ch)
 	ch.keyState = make(map[int]*int)
 	ch.ctrlKeyState = make(map[int]*int)
+	ch.mouseKeyState = make(map[uint8]*int)
 	ch.keyMap = keyMap
 	ch.ctrlKeyMap = ctrlKeyMap
+	ch.mouseKeyMap = mouseKeyMap
 	ch.directionController.keyMap = keyMap
 	ch.doubleHit = 0
 	return &ch
@@ -342,6 +347,11 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 		} else {
 			ch.startMainPointerMotion(event.X, event.Y)
 		}
+	} else if ch.mouseKeyMap[event.Button] != nil {
+		if ch.mouseKeyState[event.Button] == nil {
+			ch.mouseKeyState[event.Button] = fingers.GetId()
+			ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.mouseKeyState[event.Button], *ch.mouseKeyMap[event.Button])
+		}
 	}
 
 	return true, nil
@@ -366,10 +376,11 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 				return b, e
 			}
 		}
-	} else if event.Button == sdl.BUTTON_RIGHT {
-		ch.doubleHit = (ch.doubleHit + 1) % 2
-		if debugOpt.Debug() {
-			log.Printf("连击模式:%d\n", ch.doubleHit)
+	} else if ch.mouseKeyMap[event.Button] != nil {
+		if ch.mouseKeyState[event.Button] != nil {
+			ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.mouseKeyState[event.Button], *ch.mouseKeyMap[event.Button])
+			fingers.Recycle(ch.mouseKeyState[event.Button])
+			ch.mouseKeyState[event.Button] = nil
 		}
 	}
 
@@ -446,11 +457,6 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			switch event.Keysym.Sym {
 			case sdl.K_x:
 				sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
-			case sdl.K_z:
-				ch.doubleHit = -1
-				if debugOpt.Debug() {
-					log.Printf("连击模式:%d\n", ch.doubleHit)
-				}
 			}
 		}
 	} else {
@@ -498,6 +504,22 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 				mm := newMirrorMotion(Point{687, 227}, Point{675, 341})
 				mm.Start(ch.controller)
 				return true, nil
+
+			case sdl.K_0:
+				ch.doubleHit = -1
+				if debugOpt.Debug() {
+					log.Printf("连击模式:%d\n", ch.doubleHit)
+				}
+
+			case sdl.K_EQUALS:
+				ch.doubleHit = (ch.doubleHit + 1) % 2
+
+			case sdl.K_MINUS:
+				ch.doubleHit = ch.doubleHit - 1
+				if ch.doubleHit < 0 {
+					ch.doubleHit += 2
+				}
+				ch.doubleHit = ch.doubleHit % 2
 			}
 		}
 	}

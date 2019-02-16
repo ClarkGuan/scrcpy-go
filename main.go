@@ -23,8 +23,8 @@ func main() {
 			sdl.K_c:              {1964, 978},
 			sdl.K_LSHIFT:         {1775, 1000},
 			sdl.K_r:              {1623, 1013},
-			sdl.K_e:              {2000, 566},
-			sdl.K_q:              {1755, 291},
+			sdl.K_e:              {507, 399},
+			sdl.K_q:              {352, 395},
 			sdl.K_z:              {1080, 662},
 			sdl.K_t:              {1444, 274},
 			sdl.K_y:              {1520, 281},
@@ -58,6 +58,10 @@ func main() {
 			sdl.K_5: {1759, 695},
 			sdl.K_6: {1878, 692},
 			sdl.K_7: {1755, 811},
+		},
+		MouseKeyMap: map[uint8]*scrcpy.Point{
+			sdl.BUTTON_RIGHT: {2000, 566},
+			sdl.BUTTON_X1:    {1755, 291},
 		},
 	}
 	log.Println(scrcpy.Main(&option))
