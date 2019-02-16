@@ -14,12 +14,14 @@ const (
 	VisionKeyCode
 	FrontKeyCode
 	BackKeyCode
+	WheelKeyCode
 )
 
 const mouseAccuracy = .085
 const mouseVisionDelay = time.Millisecond * 500
 const eventVisionEventUp = sdl.USEREVENT + 3
 const eventDirectionEvent = sdl.USEREVENT + 4
+const eventWheelEvent = sdl.USEREVENT + 5
 
 type controlHandler struct {
 	controller Controller
@@ -31,7 +33,8 @@ type controlHandler struct {
 	ctrlKeyState map[int]*int
 	ctrlKeyMap   map[int]*Point
 
-	cachePointer Point
+	visionCachePointer Point
+	wheelCachePointer  Point
 
 	directionController directionController
 	timer               map[uint32]*time.Timer
@@ -121,17 +124,27 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 		var b bool
 		var e error
 		if ch.keyState[VisionKeyCode] != nil {
-			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
+			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
 			ch.keyState[VisionKeyCode] = nil
 			if debugOpt.Info() {
-				log.Println("视角控制，松开，点：", ch.cachePointer)
+				log.Println("视角控制，松开，点：", ch.visionCachePointer)
 			}
 		}
 		return b, e
 
 	case eventDirectionEvent:
 		return true, ch.directionController.sendMouseEvent(ch.controller)
+
+	case eventWheelEvent:
+		var b bool
+		var e error
+		if ch.keyState[WheelKeyCode] != nil {
+			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[WheelKeyCode], ch.wheelCachePointer)
+			fingers.Recycle(ch.keyState[WheelKeyCode])
+			ch.keyState[WheelKeyCode] = nil
+		}
+		return b, e
 
 	case sdl.MOUSEMOTION:
 		return ch.handleMouseMotion(event.(*sdl.MouseMotionEvent))
@@ -141,6 +154,9 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 
 	case sdl.MOUSEBUTTONUP:
 		return ch.handleMouseButtonUp(event.(*sdl.MouseButtonEvent))
+
+	case sdl.MOUSEWHEEL:
+		return ch.handleMouseWheelMotion(event.(*sdl.MouseWheelEvent))
 
 	case sdl.KEYDOWN:
 		return ch.handleKeyDown(event.(*sdl.KeyboardEvent))
@@ -193,31 +209,31 @@ func fixMouseBlock(x int32) int32 {
 func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
 	if ch.keyState[VisionKeyCode] == nil {
 		ch.keyState[VisionKeyCode] = fingers.GetId()
-		ch.cachePointer = Point{950, 450}
+		ch.visionCachePointer = Point{950, 450}
 		ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
 		if debugOpt.Info() {
-			log.Println("视角控制，开始，点：", ch.cachePointer)
+			log.Println("视角控制，开始，点：", ch.visionCachePointer)
 		}
-		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.cachePointer)
+		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
 	} else {
 		deltaX := fixMouseBlock(event.XRel)
 		deltaY := fixMouseBlock(event.YRel)
-		ch.cachePointer.X = uint16(int32(ch.cachePointer.X) + deltaX)
-		ch.cachePointer.Y = uint16(int32(ch.cachePointer.Y) + deltaY + int32(delta))
-		if ch.outside(&ch.cachePointer) {
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
+		ch.visionCachePointer.X = uint16(int32(ch.visionCachePointer.X) + deltaX)
+		ch.visionCachePointer.Y = uint16(int32(ch.visionCachePointer.Y) + deltaY + int32(delta))
+		if ch.outside(&ch.visionCachePointer) {
+			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
 			ch.keyState[VisionKeyCode] = nil
 			if debugOpt.Info() {
-				log.Printf("视角控制(%d, %d)，超出范围，点：%s\n", deltaX, deltaY, ch.cachePointer)
+				log.Printf("视角控制(%d, %d)，超出范围，点：%s\n", deltaX, deltaY, ch.visionCachePointer)
 			}
 			return b, e
 		} else {
 			ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
 			if debugOpt.Info() {
-				log.Printf("视角控制(%d, %d)，点：%s\n", deltaX, deltaY, ch.cachePointer)
+				log.Printf("视角控制(%d, %d)，点：%s\n", deltaX, deltaY, ch.visionCachePointer)
 			}
-			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.cachePointer)
+			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
 		}
 	}
 }
@@ -274,7 +290,7 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 		ch.stopContinuousFire()
 
 		if ch.keyState[VisionKeyCode] != nil {
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.cachePointer)
+			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
 			fingers.Recycle(ch.keyState[VisionKeyCode])
 			ch.keyState[VisionKeyCode] = nil
 			return b, e
@@ -486,6 +502,28 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 		}
 	}
 
+	return true, nil
+}
+
+func (ch *controlHandler) handleMouseWheelMotion(event *sdl.MouseWheelEvent) (bool, error) {
+	log.Printf("x: %d, y: %d, direction: %d\n", event.X, event.Y, event.Direction)
+	if ch.keyState[WheelKeyCode] == nil {
+		ch.keyState[WheelKeyCode] = fingers.GetId()
+		ch.wheelCachePointer = *ch.keyMap[sdl.K_g]
+		ch.sendEventDelay(eventWheelEvent, 150*time.Millisecond)
+		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[WheelKeyCode], ch.wheelCachePointer)
+	} else {
+		deltaY := event.Y * 20
+		tmp := int32(ch.wheelCachePointer.Y) + deltaY
+		if tmp < 0 {
+			tmp = 0
+		} else if tmp > 800 {
+			tmp = 800
+		}
+		ch.wheelCachePointer.Y = uint16(tmp)
+		ch.sendEventDelay(eventWheelEvent, 150*time.Millisecond)
+		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[WheelKeyCode], ch.wheelCachePointer)
+	}
 	return true, nil
 }
 
