@@ -64,7 +64,7 @@ type controlHandler struct {
 func (ch *controlHandler) Init(r sdl.Renderer) {
 	var err error
 	if ch.font == nil {
-		if ch.font, err = OpenFont(filepath.Join(sdl.GetBasePath(), "YaHei.Consolas.1.12.ttf"), 25); err != nil {
+		if ch.font, err = OpenFont(filepath.Join(sdl.GetBasePath(), "YaHei.Consolas.1.12.ttf"), 45); err != nil {
 			panic(err)
 		}
 	}
