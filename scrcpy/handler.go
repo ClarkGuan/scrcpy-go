@@ -18,7 +18,7 @@ const (
 	WheelKeyCode
 )
 
-const mouseAccuracy = .085
+const mouseAccuracy = .185
 const mouseVisionDelay = time.Millisecond * 500
 const eventVisionEventUp = sdl.USEREVENT + 3
 const eventDirectionEvent = sdl.USEREVENT + 4
