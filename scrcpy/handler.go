@@ -1,6 +1,7 @@
 package scrcpy
 
 import (
+	"fmt"
 	"log"
 	"path/filepath"
 	"time"
@@ -22,6 +23,15 @@ const mouseVisionDelay = time.Millisecond * 500
 const eventVisionEventUp = sdl.USEREVENT + 3
 const eventDirectionEvent = sdl.USEREVENT + 4
 const eventWheelEvent = sdl.USEREVENT + 5
+
+var mouseIntervalArray = []time.Duration{
+	30 * time.Millisecond,
+	90 * time.Millisecond,
+	120 * time.Millisecond,
+	200 * time.Millisecond,
+	300 * time.Millisecond,
+	400 * time.Millisecond,
+}
 
 type controlHandler struct {
 	controller Controller
@@ -45,10 +55,8 @@ type controlHandler struct {
 	*continuousFire
 
 	font                        *Font
-	doubleHitFastTexture        sdl.Texture
-	doubleHitFastTextureSize    sdl.Rect
-	doubleHitSlowTexture        sdl.Texture
-	doubleHitSlowTextureSize    sdl.Rect
+	doubleHitEnableTexture      []sdl.Texture
+	doubleHitEnableTextureSize  []sdl.Rect
 	doubleHitDisableTexture     sdl.Texture
 	doubleHitDisableTextureSize sdl.Rect
 }
@@ -61,8 +69,11 @@ func (ch *controlHandler) Init(r sdl.Renderer) {
 		}
 	}
 
-	ch.doubleHitFastTexture, ch.doubleHitFastTextureSize = ch.initTextures(r, "连击模式：快")
-	ch.doubleHitSlowTexture, ch.doubleHitSlowTextureSize = ch.initTextures(r, "连击模式：慢")
+	ch.doubleHitEnableTexture = make([]sdl.Texture, len(mouseIntervalArray))
+	ch.doubleHitEnableTextureSize = make([]sdl.Rect, len(mouseIntervalArray))
+	for i := range mouseIntervalArray {
+		ch.doubleHitEnableTexture[i], ch.doubleHitEnableTextureSize[i] = ch.initTextures(r, fmt.Sprintf("连击模式：%s", mouseIntervalArray[i]))
+	}
 	ch.doubleHitDisableTexture, ch.doubleHitDisableTextureSize = ch.initTextures(r, "连击模式：关闭")
 }
 
@@ -91,13 +102,8 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 		// 关闭
 		r.Copy(ch.doubleHitDisableTexture, nil, &ch.doubleHitDisableTextureSize)
 
-	case 0:
-		// 快
-		r.Copy(ch.doubleHitFastTexture, nil, &ch.doubleHitFastTextureSize)
-
-	case 1:
-		// 慢
-		r.Copy(ch.doubleHitSlowTexture, nil, &ch.doubleHitSlowTextureSize)
+	default:
+		r.Copy(ch.doubleHitEnableTexture[ch.doubleHit], nil, &ch.doubleHitEnableTextureSize[ch.doubleHit])
 	}
 }
 
@@ -332,17 +338,8 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 					log.Println("正常开火")
 				}
 
-			case 0:
-				ch.startContinuousFire(30 * time.Millisecond)
-				if debugOpt.Debug() {
-					log.Println("连击快速")
-				}
-
-			case 1:
-				ch.startContinuousFire(200 * time.Millisecond)
-				if debugOpt.Debug() {
-					log.Println("连击慢速")
-				}
+			default:
+				ch.startContinuousFire(mouseIntervalArray[ch.doubleHit])
 			}
 		} else {
 			ch.startMainPointerMotion(event.X, event.Y)
@@ -512,14 +509,14 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 				}
 
 			case sdl.K_EQUALS:
-				ch.doubleHit = (ch.doubleHit + 1) % 2
+				ch.doubleHit = (ch.doubleHit + 1) % len(mouseIntervalArray)
 
 			case sdl.K_MINUS:
 				ch.doubleHit = ch.doubleHit - 1
 				if ch.doubleHit < 0 {
-					ch.doubleHit += 2
+					ch.doubleHit += len(mouseIntervalArray)
 				}
-				ch.doubleHit = ch.doubleHit % 2
+				ch.doubleHit = ch.doubleHit % len(mouseIntervalArray)
 			}
 		}
 	}
