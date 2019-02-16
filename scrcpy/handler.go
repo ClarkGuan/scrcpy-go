@@ -328,13 +328,13 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 				}
 
 			case 1:
-				ch.startContinuousFire(60 * time.Millisecond)
+				ch.startContinuousFire(30 * time.Millisecond)
 				if debugOpt.Debug() {
 					log.Println("连击快速")
 				}
 
 			case 2:
-				ch.startContinuousFire(250 * time.Millisecond)
+				ch.startContinuousFire(200 * time.Millisecond)
 				if debugOpt.Debug() {
 					log.Println("连击慢速")
 				}
@@ -513,13 +513,23 @@ func (ch *controlHandler) handleMouseWheelMotion(event *sdl.MouseWheelEvent) (bo
 		ch.sendEventDelay(eventWheelEvent, 150*time.Millisecond)
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[WheelKeyCode], ch.wheelCachePointer)
 	} else {
-		deltaY := event.Y * 20
+		deltaY := event.Y * 10
 		tmp := int32(ch.wheelCachePointer.Y) + deltaY
 		if tmp < 0 {
 			tmp = 0
 		} else if tmp > 800 {
 			tmp = 800
 		}
+
+		//cha := tmp - int32(ch.keyMap[sdl.K_g].Y)
+		//if cha > -100 && cha < 100 {
+		//	if tmp < 0 {
+		//		tmp = int32(ch.keyMap[sdl.K_g].Y) - 100
+		//	} else {
+		//		tmp = int32(ch.keyMap[sdl.K_g].Y) + 100
+		//	}
+		//}
+
 		ch.wheelCachePointer.Y = uint16(tmp)
 		ch.sendEventDelay(eventWheelEvent, 150*time.Millisecond)
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[WheelKeyCode], ch.wheelCachePointer)

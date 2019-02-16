@@ -21,8 +21,8 @@ func (cf *continuousFire) Start(c Controller, interval time.Duration) {
 }
 
 func (cf *continuousFire) SetInterval(interval time.Duration) {
-	if interval < 60*time.Millisecond {
-		cf.interval = 60 * time.Millisecond
+	if interval < 30*time.Millisecond {
+		cf.interval = 30 * time.Millisecond
 	} else {
 		cf.interval = interval
 	}
@@ -37,7 +37,7 @@ func (cf *continuousFire) inProgress(data interface{}) time.Duration {
 			cf.id = fingers.GetId()
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_DOWN, *cf.id)
 			cf.state++
-			return 60 * time.Millisecond
+			return 30 * time.Millisecond
 
 		case 1:
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_UP, *cf.id)
