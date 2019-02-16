@@ -49,6 +49,11 @@ func main() {
 			sdl.K_DOWN:           {1706, 838},
 			sdl.K_p:              {1901, 586},
 			sdl.K_x:              {2014, 450},
+			sdl.K_COMMA:          {1469, 744},
+			sdl.K_LEFTBRACKET:    {2008, 264},
+			sdl.K_RIGHTBRACKET:   {2018, 825},
+			sdl.K_BACKSLASH:      {1885, 1021},
+			sdl.K_QUOTE:          {1477, 1015},
 		},
 		CtrlKeyMap: map[int]*scrcpy.Point{
 			sdl.K_1: {1794, 457},
