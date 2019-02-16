@@ -17,7 +17,7 @@ const (
 )
 
 // 斜上 70，正上 150
-const deltaDirectionObliqueMovement = 70
+const deltaDirectionObliqueMovement = 80
 const deltaDirectionRightUpMovement = 150
 
 type directionController struct {

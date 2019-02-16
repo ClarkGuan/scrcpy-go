@@ -17,8 +17,8 @@ func main() {
 		KeyMap: map[int]*scrcpy.Point{
 			scrcpy.FireKeyCode:   {416, 86},
 			scrcpy.VisionKeyCode: {1525, 545},
-			scrcpy.FrontKeyCode:  {350, 695},
-			scrcpy.BackKeyCode:   {350, 921},
+			scrcpy.FrontKeyCode:  {346, 689},
+			scrcpy.BackKeyCode:   {346, 913},
 			sdl.K_SPACE:          {1994, 745},
 			sdl.K_c:              {1964, 978},
 			sdl.K_LSHIFT:         {1775, 1000},
