@@ -117,7 +117,8 @@ func newControlHandler(controller Controller, keyMap, ctrlKeyMap map[int]*Point,
 	ch.ctrlKeyMap = ctrlKeyMap
 	ch.mouseKeyMap = mouseKeyMap
 	ch.directionController.keyMap = keyMap
-	ch.doubleHit = 0
+	// 默认是正常模式
+	ch.doubleHit = -1
 	return &ch
 }
 
@@ -439,6 +440,34 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 	alt := event.Keysym.Mod&(sdl.KMOD_RALT|sdl.KMOD_LALT) != 0
 	if alt {
+		switch event.Keysym.Sym {
+		case sdl.K_1:
+			ch.doubleHit = 0 % len(mouseIntervalArray)
+
+		case sdl.K_2:
+			ch.doubleHit = 1 % len(mouseIntervalArray)
+
+		case sdl.K_3:
+			ch.doubleHit = 2 % len(mouseIntervalArray)
+
+		case sdl.K_4:
+			ch.doubleHit = 3 % len(mouseIntervalArray)
+
+		case sdl.K_5:
+			ch.doubleHit = 4 % len(mouseIntervalArray)
+
+		case sdl.K_6:
+			ch.doubleHit = 5 % len(mouseIntervalArray)
+
+		case sdl.K_7:
+			ch.doubleHit = 6 % len(mouseIntervalArray)
+
+		case sdl.K_8:
+			ch.doubleHit = 7 % len(mouseIntervalArray)
+
+		case sdl.K_9:
+			ch.doubleHit = 8 % len(mouseIntervalArray)
+		}
 		return true, nil
 	}
 	ctrl := event.Keysym.Mod&(sdl.KMOD_RCTRL|sdl.KMOD_LCTRL) != 0
@@ -512,11 +541,10 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 				ch.doubleHit = (ch.doubleHit + 1) % len(mouseIntervalArray)
 
 			case sdl.K_MINUS:
-				ch.doubleHit = ch.doubleHit - 1
-				if ch.doubleHit < 0 {
-					ch.doubleHit += len(mouseIntervalArray)
+				if ch.doubleHit <= 0 {
+					ch.doubleHit = len(mouseIntervalArray)
 				}
-				ch.doubleHit = ch.doubleHit % len(mouseIntervalArray)
+				ch.doubleHit = (ch.doubleHit - 1) % len(mouseIntervalArray)
 			}
 		}
 	}
