@@ -117,6 +117,12 @@ func main() {
 			sdl.K_l: {{scrcpy.Point{678, 217}, 100 * time.Millisecond},
 				{scrcpy.Point{680, 327}, 30 * time.Millisecond},
 				{scrcpy.Point{678, 217}, 0}},
+			// 前方有敌人
+			sdl.K_u: {{scrcpy.Point{2010, 358}, 100 * time.Millisecond},
+				{scrcpy.Point{1720, 156}, 0}},
+			// 我这有物资
+			sdl.K_i: {{scrcpy.Point{2010, 358}, 100 * time.Millisecond},
+				{scrcpy.Point{1738, 233}, 0}},
 		},
 	}
 	log.Println(scrcpy.Main(&option))
