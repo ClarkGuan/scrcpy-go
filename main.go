@@ -93,6 +93,8 @@ func main() {
 			sdl.K_BACKSLASH: {1885, 1021},
 			// 取消标记点
 			sdl.K_QUOTE: {1477, 1015},
+			// 取消投掷
+			sdl.K_BACKQUOTE: {662, 562},
 		},
 		CtrlKeyMap: map[int]*scrcpy.Point{
 			sdl.K_1: {1794, 457},
