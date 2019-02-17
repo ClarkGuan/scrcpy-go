@@ -8,15 +8,16 @@ import (
 )
 
 type Option struct {
-	Serial      string
-	Crop        string
-	Port        int
-	MaxSize     int
-	BitRate     int
-	Debug       DebugLevel
-	KeyMap      map[int]*Point
-	CtrlKeyMap  map[int]*Point
-	MouseKeyMap map[uint8]*Point
+	Serial              string
+	Crop                string
+	Port                int
+	MaxSize             int
+	BitRate             int
+	Debug               DebugLevel
+	KeyMap              map[int]*Point
+	CtrlKeyMap          map[int]*Point
+	MouseKeyMap         map[uint8]*Point
+	PointIntervalKeyMap map[int][]*PointInterval
 }
 
 func Main(opt *Option) (err error) {
@@ -76,7 +77,11 @@ func Main(opt *Option) (err error) {
 	fh := &frameHandler{screen: &screen, frames: &frames}
 	looper.Register(fh)
 
-	ch := newControlHandler(controller, opt.KeyMap, opt.CtrlKeyMap, opt.MouseKeyMap)
+	ch := newControlHandler(controller,
+		opt.KeyMap,
+		opt.CtrlKeyMap,
+		opt.MouseKeyMap,
+		opt.PointIntervalKeyMap)
 	looper.Register(ch)
 	screen.addRendererFunc(ch)
 

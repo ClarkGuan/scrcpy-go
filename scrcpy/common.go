@@ -2,6 +2,7 @@ package scrcpy
 
 import (
 	"fmt"
+	"time"
 )
 
 type DebugLevel int
@@ -53,4 +54,9 @@ type Point struct {
 
 func (p Point) String() string {
 	return fmt.Sprintf("Point: (%d, %d)", p.X, p.Y)
+}
+
+type PointInterval struct {
+	Point
+	Interval time.Duration
 }

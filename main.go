@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/ClarkGuan/go-sdl2/sdl"
 	"github.com/ClarkGuan/scrcpy-go/scrcpy"
@@ -31,7 +32,7 @@ func main() {
 			sdl.K_f:              {1447, 377},
 			sdl.K_g:              {1447, 490},
 			sdl.K_h:              {1447, 599},
-			sdl.K_j:              {1447, 689},
+			sdl.K_j:              {1395, 670},
 			sdl.K_v:              {1424, 745},
 			sdl.K_1:              {967, 983},
 			sdl.K_2:              {1205, 977},
@@ -67,6 +68,14 @@ func main() {
 		MouseKeyMap: map[uint8]*scrcpy.Point{
 			sdl.BUTTON_RIGHT: {507, 399},
 			sdl.BUTTON_X1:    {1755, 291},
+		},
+		PointIntervalKeyMap: map[int][]*scrcpy.PointInterval{
+			sdl.K_k: {{scrcpy.Point{680, 217}, 100 * time.Millisecond},
+				{scrcpy.Point{680, 601}, 30 * time.Millisecond},
+				{scrcpy.Point{674, 223}, 0}},
+			sdl.K_l: {{scrcpy.Point{678, 217}, 100 * time.Millisecond},
+				{scrcpy.Point{680, 327}, 30 * time.Millisecond},
+				{scrcpy.Point{678, 217}, 0}},
 		},
 	}
 	log.Println(scrcpy.Main(&option))

@@ -46,6 +46,8 @@ type controlHandler struct {
 	mouseKeyState map[uint8]*int
 	mouseKeyMap   map[uint8]*Point
 
+	pointIntervalKeyMap map[int][]*PointInterval
+
 	visionCachePointer Point
 	wheelCachePointer  Point
 
@@ -107,7 +109,10 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 	}
 }
 
-func newControlHandler(controller Controller, keyMap, ctrlKeyMap map[int]*Point, mouseKeyMap map[uint8]*Point) *controlHandler {
+func newControlHandler(controller Controller,
+	keyMap, ctrlKeyMap map[int]*Point,
+	mouseKeyMap map[uint8]*Point,
+	pointIntervalKeyMap map[int][]*PointInterval) *controlHandler {
 	ch := controlHandler{controller: controller}
 	controller.Register(&ch)
 	ch.keyState = make(map[int]*int)
@@ -119,6 +124,7 @@ func newControlHandler(controller Controller, keyMap, ctrlKeyMap map[int]*Point,
 	ch.directionController.keyMap = keyMap
 	// 默认是正常模式
 	ch.doubleHit = -1
+	ch.pointIntervalKeyMap = pointIntervalKeyMap
 	return &ch
 }
 
@@ -504,47 +510,35 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 				return b, e
 			}
 		} else {
-			switch event.Keysym.Sym {
-			case sdl.K_w:
-				ch.directionController.frontUp()
-				return true, nil
+			if ch.pointIntervalKeyMap[keyCode] != nil {
+				ca := newControllerAnimation(ch.controller, ch.pointIntervalKeyMap[keyCode])
+				ca.start()
+			} else {
+				switch event.Keysym.Sym {
+				case sdl.K_w:
+					ch.directionController.frontUp()
 
-			case sdl.K_s:
-				ch.directionController.backUp()
-				return true, nil
+				case sdl.K_s:
+					ch.directionController.backUp()
 
-			case sdl.K_a:
-				ch.directionController.leftUp()
-				return true, nil
+				case sdl.K_a:
+					ch.directionController.leftUp()
 
-			case sdl.K_d:
-				ch.directionController.rightUp()
-				return true, nil
+				case sdl.K_d:
+					ch.directionController.rightUp()
 
-			case sdl.K_k:
-				mm := newMirrorMotion(Point{687, 227}, Point{675, 596})
-				mm.Start(ch.controller)
-				return true, nil
+				case sdl.K_0:
+					ch.doubleHit = -1
 
-			case sdl.K_l:
-				mm := newMirrorMotion(Point{687, 227}, Point{675, 341})
-				mm.Start(ch.controller)
-				return true, nil
+				case sdl.K_EQUALS:
+					ch.doubleHit = (ch.doubleHit + 1) % len(mouseIntervalArray)
 
-			case sdl.K_0:
-				ch.doubleHit = -1
-				if debugOpt.Debug() {
-					log.Printf("连击模式:%d\n", ch.doubleHit)
+				case sdl.K_MINUS:
+					if ch.doubleHit <= 0 {
+						ch.doubleHit = len(mouseIntervalArray)
+					}
+					ch.doubleHit = (ch.doubleHit - 1) % len(mouseIntervalArray)
 				}
-
-			case sdl.K_EQUALS:
-				ch.doubleHit = (ch.doubleHit + 1) % len(mouseIntervalArray)
-
-			case sdl.K_MINUS:
-				if ch.doubleHit <= 0 {
-					ch.doubleHit = len(mouseIntervalArray)
-				}
-				ch.doubleHit = (ch.doubleHit - 1) % len(mouseIntervalArray)
 			}
 		}
 	}
@@ -567,16 +561,6 @@ func (ch *controlHandler) handleMouseWheelMotion(event *sdl.MouseWheelEvent) (bo
 		} else if tmp > 800 {
 			tmp = 800
 		}
-
-		//cha := tmp - int32(ch.keyMap[sdl.K_g].Y)
-		//if cha > -100 && cha < 100 {
-		//	if tmp < 0 {
-		//		tmp = int32(ch.keyMap[sdl.K_g].Y) - 100
-		//	} else {
-		//		tmp = int32(ch.keyMap[sdl.K_g].Y) + 100
-		//	}
-		//}
-
 		ch.wheelCachePointer.Y = uint16(tmp)
 		ch.sendEventDelay(eventWheelEvent, 150*time.Millisecond)
 		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[WheelKeyCode], ch.wheelCachePointer)
