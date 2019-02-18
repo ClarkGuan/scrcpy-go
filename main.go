@@ -13,14 +13,20 @@ func main() {
 	log.Printf("SDL %d.%d.%d\n", sdl.MAJOR_VERSION, sdl.MINOR_VERSION, sdl.PATCHLEVEL)
 
 	var debugLevel int
+	var bitRate int
+	var maxSize int
+	var port int
 	flag.IntVar(&debugLevel, "log", 0, "日志等级设置")
+	flag.IntVar(&bitRate, "bitrate", 8000000, "视频码率")
+	flag.IntVar(&maxSize, "maxsize", 0, "未知")
+	flag.IntVar(&port, "port", 27183, "adb 端口号")
 	flag.Parse()
 
 	option := scrcpy.Option{
 		Debug:   scrcpy.DebugLevelWrap(debugLevel),
-		BitRate: 8000000,
-		MaxSize: 0,
-		Port:    27183,
+		BitRate: bitRate,
+		MaxSize: maxSize,
+		Port:    port,
 		KeyMap: map[int]scrcpy.UserOperation{
 			// 开火键
 			scrcpy.FireKeyCode: &scrcpy.Point{416, 86},
