@@ -12,7 +12,9 @@ import (
 const (
 	mainPointerKeyCode = 500 + iota
 	FireKeyCode
-	VisionKeyCode
+	visionKeyCode
+	VisionBoundTopLeft
+	VisionBoundBottomRight
 	FrontKeyCode
 	BackKeyCode
 	WheelKeyCode
@@ -44,8 +46,9 @@ type controlHandler struct {
 	mouseKeyState map[uint8]*int
 	mouseKeyMap   map[uint8]UserOperation
 
-	visionCachePointer Point
-	wheelCachePointer  Point
+	visionCachePointer  Point
+	visionCenterPointer *Point
+	wheelCachePointer   Point
 
 	directionController directionController
 	timer               map[uint32]*time.Timer
@@ -135,10 +138,10 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 	case eventVisionEventUp:
 		var b bool
 		var e error
-		if ch.keyState[VisionKeyCode] != nil {
-			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
-			fingers.Recycle(ch.keyState[VisionKeyCode])
-			ch.keyState[VisionKeyCode] = nil
+		if ch.keyState[visionKeyCode] != nil {
+			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[visionKeyCode], ch.visionCachePointer)
+			fingers.Recycle(ch.keyState[visionKeyCode])
+			ch.keyState[visionKeyCode] = nil
 			if debugOpt.Info() {
 				log.Println("视角控制，松开，点：", ch.visionCachePointer)
 			}
@@ -182,8 +185,9 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 
 func (ch *controlHandler) outside(p *Point) bool {
 	ret := false
-	minW := uint16(650)
-	maxW := uint16(1200)
+	topLeft, bottomRight := ch.keyMap[VisionBoundTopLeft].(*Point), ch.keyMap[VisionBoundBottomRight].(*Point)
+	minW := uint16(topLeft.X)
+	maxW := uint16(bottomRight.X)
 	if p.X < minW {
 		ret = true
 		p.X = minW
@@ -192,8 +196,8 @@ func (ch *controlHandler) outside(p *Point) bool {
 		p.X = maxW
 	}
 
-	minH := uint16(100)
-	maxH := uint16(850)
+	minH := uint16(topLeft.Y)
+	maxH := uint16(bottomRight.Y)
 	if p.Y < minH {
 		ret = true
 		p.Y = minH
@@ -203,6 +207,17 @@ func (ch *controlHandler) outside(p *Point) bool {
 	}
 
 	return ret
+}
+
+func (ch *controlHandler) getVisionCenterPoint() Point {
+	if ch.visionCenterPointer == nil {
+		topLeft, bottomRight := ch.keyMap[VisionBoundTopLeft].(*Point), ch.keyMap[VisionBoundBottomRight].(*Point)
+		ch.visionCenterPointer = &Point{
+			(topLeft.X + bottomRight.X) >> 1,
+			(topLeft.Y + bottomRight.Y) >> 1,
+		}
+	}
+	return *ch.visionCenterPointer
 }
 
 func fixMouseBlock(x int32) int32 {
@@ -219,23 +234,23 @@ func fixMouseBlock(x int32) int32 {
 }
 
 func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
-	if ch.keyState[VisionKeyCode] == nil {
-		ch.keyState[VisionKeyCode] = fingers.GetId()
-		ch.visionCachePointer = Point{950, 450}
+	if ch.keyState[visionKeyCode] == nil {
+		ch.keyState[visionKeyCode] = fingers.GetId()
+		ch.visionCachePointer = ch.getVisionCenterPoint()
 		ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
 		if debugOpt.Info() {
 			log.Println("视角控制，开始，点：", ch.visionCachePointer)
 		}
-		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
+		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[visionKeyCode], ch.visionCachePointer)
 	} else {
 		deltaX := fixMouseBlock(event.XRel)
 		deltaY := fixMouseBlock(event.YRel)
 		ch.visionCachePointer.X = uint16(int32(ch.visionCachePointer.X) + deltaX)
 		ch.visionCachePointer.Y = uint16(int32(ch.visionCachePointer.Y) + deltaY + int32(delta))
 		if ch.outside(&ch.visionCachePointer) {
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
-			fingers.Recycle(ch.keyState[VisionKeyCode])
-			ch.keyState[VisionKeyCode] = nil
+			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[visionKeyCode], ch.visionCachePointer)
+			fingers.Recycle(ch.keyState[visionKeyCode])
+			ch.keyState[visionKeyCode] = nil
 			if debugOpt.Info() {
 				log.Printf("视角控制(%d, %d)，超出范围，点：%s\n", deltaX, deltaY, ch.visionCachePointer)
 			}
@@ -245,7 +260,7 @@ func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (
 			if debugOpt.Info() {
 				log.Printf("视角控制(%d, %d)，点：%s\n", deltaX, deltaY, ch.visionCachePointer)
 			}
-			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
+			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[visionKeyCode], ch.visionCachePointer)
 		}
 	}
 }
@@ -301,10 +316,10 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 		// 无论如何，关闭连击宏操作
 		ch.stopContinuousFire()
 
-		if ch.keyState[VisionKeyCode] != nil {
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[VisionKeyCode], ch.visionCachePointer)
-			fingers.Recycle(ch.keyState[VisionKeyCode])
-			ch.keyState[VisionKeyCode] = nil
+		if ch.keyState[visionKeyCode] != nil {
+			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[visionKeyCode], ch.visionCachePointer)
+			fingers.Recycle(ch.keyState[visionKeyCode])
+			ch.keyState[visionKeyCode] = nil
 			return b, e
 		}
 

@@ -24,8 +24,10 @@ func main() {
 		KeyMap: map[int]scrcpy.UserOperation{
 			// 开火键
 			scrcpy.FireKeyCode: &scrcpy.Point{416, 86},
-			// 视野中心坐标
-			scrcpy.VisionKeyCode: &scrcpy.Point{1525, 545},
+			// 视野滑动事件左上坐标
+			scrcpy.VisionBoundTopLeft: &scrcpy.Point{650, 100},
+			// 视野滑动事件右下坐标
+			scrcpy.VisionBoundBottomRight: &scrcpy.Point{1200, 850},
 			// 方向键 前
 			scrcpy.FrontKeyCode: &scrcpy.Point{346, 689},
 			// 方向键 后
