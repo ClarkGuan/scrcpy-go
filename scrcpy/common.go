@@ -60,7 +60,12 @@ func (p Point) String() string {
 	return fmt.Sprintf("Point: (%d, %d)", p.X, p.Y)
 }
 
-type PointInterval struct {
+type PointMacro struct {
 	Point
 	Interval time.Duration
+}
+
+type SPoint Point
+
+type UserOperation interface {
 }

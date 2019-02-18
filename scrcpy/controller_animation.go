@@ -5,7 +5,7 @@ import (
 )
 
 type controllerAnimation struct {
-	pointIntervals []*PointInterval
+	pointIntervals []*PointMacro
 	state          int
 	controller     Controller
 	id             *int
@@ -14,7 +14,7 @@ type controllerAnimation struct {
 
 var eventConstants = []androidMotionEventAction{AMOTION_EVENT_ACTION_DOWN, AMOTION_EVENT_ACTION_UP}
 
-func newControllerAnimation(c Controller, pointIntervals []*PointInterval) *controllerAnimation {
+func newControllerAnimation(c Controller, pointIntervals []*PointMacro) *controllerAnimation {
 	ca := controllerAnimation{
 		pointIntervals: pointIntervals,
 	}

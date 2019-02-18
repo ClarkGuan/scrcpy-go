@@ -25,7 +25,7 @@ type directionController struct {
 	cachePoint  Point
 	middlePoint *Point
 	radius      uint16
-	keyMap      map[int]*Point
+	keyMap      map[int]UserOperation
 	id          *int
 	startFlag   int32
 	animator
@@ -86,9 +86,10 @@ func (dc *directionController) allUp() bool {
 func (dc *directionController) prepare() {
 	if dc.middlePoint == nil {
 		dc.middlePoint = new(Point)
-		dc.middlePoint.X = dc.keyMap[FrontKeyCode].X
-		dc.middlePoint.Y = (dc.keyMap[FrontKeyCode].Y + dc.keyMap[BackKeyCode].Y) >> 1
-		dc.radius = dc.middlePoint.Y - dc.keyMap[FrontKeyCode].Y
+		frontP, backP := dc.keyMap[FrontKeyCode].(*Point), dc.keyMap[BackKeyCode].(*Point)
+		dc.middlePoint.X = frontP.X
+		dc.middlePoint.Y = (frontP.Y + backP.Y) >> 1
+		dc.radius = dc.middlePoint.Y - frontP.Y
 	}
 }
 
