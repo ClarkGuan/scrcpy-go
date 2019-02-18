@@ -62,10 +62,12 @@ func main() {
 			sdl.K_1: &scrcpy.Point{967, 983},
 			// 2号武器
 			sdl.K_2: &scrcpy.Point{1205, 977},
+			// 3号武器
+			sdl.K_3: &scrcpy.Point{1298, 907},
 			// 使用医疗物品
-			sdl.K_3: &scrcpy.Point{715, 1013},
+			sdl.K_4: &scrcpy.Point{715, 1013},
 			// 使用投掷物品
-			sdl.K_4: &scrcpy.Point{1444, 1020},
+			sdl.K_5: &scrcpy.Point{1444, 1020},
 			// 打开医疗物品列表
 			sdl.K_6: &scrcpy.Point{715, 930},
 			// 打开投掷物品列表
@@ -74,8 +76,6 @@ func main() {
 			sdl.K_b: &scrcpy.Point{950, 907},
 			// 2号武器单发
 			sdl.K_n: &scrcpy.Point{1162, 904},
-			// 3号武器
-			sdl.K_8: &scrcpy.Point{1298, 907},
 			// 背包列表
 			sdl.K_TAB: &scrcpy.SPoint{76, 1003},
 			// 地图
