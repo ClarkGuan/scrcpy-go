@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"time"
 
@@ -10,8 +11,13 @@ import (
 
 func main() {
 	log.Printf("SDL %d.%d.%d\n", sdl.MAJOR_VERSION, sdl.MINOR_VERSION, sdl.PATCHLEVEL)
+
+	var debugLevel int
+	flag.IntVar(&debugLevel, "log", 0, "日志等级设置")
+	flag.Parse()
+
 	option := scrcpy.Option{
-		Debug:   scrcpy.DebugLevelDebug,
+		Debug:   scrcpy.DebugLevelWrap(debugLevel),
 		BitRate: 8000000,
 		MaxSize: 0,
 		Port:    27183,

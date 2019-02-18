@@ -32,6 +32,10 @@ func (dl DebugLevel) Error() bool {
 	return dl >= DebugLevelError
 }
 
+func DebugLevelWrap(l int) DebugLevel {
+	return DebugLevel(l % 6)
+}
+
 var debugOpt = DebugLevelMin
 
 type size struct {
