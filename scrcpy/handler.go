@@ -26,11 +26,9 @@ const eventWheelEvent = sdl.USEREVENT + 5
 
 var mouseIntervalArray = []time.Duration{
 	30 * time.Millisecond,
-	90 * time.Millisecond,
 	120 * time.Millisecond,
 	200 * time.Millisecond,
 	300 * time.Millisecond,
-	400 * time.Millisecond,
 }
 
 type controlHandler struct {
@@ -458,21 +456,6 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 
 		case sdl.K_4:
 			ch.doubleHit = 3 % len(mouseIntervalArray)
-
-		case sdl.K_5:
-			ch.doubleHit = 4 % len(mouseIntervalArray)
-
-		case sdl.K_6:
-			ch.doubleHit = 5 % len(mouseIntervalArray)
-
-		case sdl.K_7:
-			ch.doubleHit = 6 % len(mouseIntervalArray)
-
-		case sdl.K_8:
-			ch.doubleHit = 7 % len(mouseIntervalArray)
-
-		case sdl.K_9:
-			ch.doubleHit = 8 % len(mouseIntervalArray)
 		}
 		return true, nil
 	}
