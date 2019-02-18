@@ -30,7 +30,7 @@ func main() {
 			sdl.K_c: {1877, 413},
 			// 蹲/加速/下沉
 			sdl.K_LSHIFT: {1716, 817},
-			// 换弹
+			// 换弹/投掷距离切换
 			sdl.K_r: {1623, 1013},
 			// 准镜/喇叭
 			sdl.K_e: {1995, 730},
@@ -75,8 +75,7 @@ func main() {
 			// 地图
 			sdl.K_m: {2020, 53},
 			// 打开准镜列表
-			sdl.K_x:     {2014, 450},
-			sdl.K_COMMA: {1469, 744},
+			sdl.K_x: {2014, 450},
 			// 比例尺放大
 			sdl.K_LEFTBRACKET: {2008, 264},
 			// 比例尺缩小
@@ -89,12 +88,19 @@ func main() {
 			sdl.K_BACKQUOTE: {662, 562},
 		},
 		CtrlKeyMap: map[int]*scrcpy.Point{
+			// 准镜切换1
 			sdl.K_1: {1794, 457},
+			// 准镜切换2
 			sdl.K_2: {1868, 460},
+			// 准镜切换3
 			sdl.K_3: {1755, 576},
+			// 准镜切换4
 			sdl.K_4: {1855, 573},
+			// 准镜切换5
 			sdl.K_5: {1759, 695},
+			// 准镜切换6
 			sdl.K_6: {1878, 692},
+			// 准镜切换7
 			sdl.K_7: {1755, 811},
 		},
 		MouseKeyMap: map[uint8]*scrcpy.Point{
@@ -111,10 +117,10 @@ func main() {
 			sdl.K_l: {{scrcpy.Point{678, 217}, 100 * time.Millisecond},
 				{scrcpy.Point{680, 327}, 30 * time.Millisecond},
 				{scrcpy.Point{678, 217}, 0}},
-			// 前方有敌人
+			// 语音：前方有敌人
 			sdl.K_u: {{scrcpy.Point{2010, 358}, 100 * time.Millisecond},
 				{scrcpy.Point{1720, 156}, 0}},
-			// 我这有物资
+			// 语音：我这有物资
 			sdl.K_i: {{scrcpy.Point{2010, 358}, 100 * time.Millisecond},
 				{scrcpy.Point{1738, 233}, 0}},
 		},
