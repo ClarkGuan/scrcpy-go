@@ -106,12 +106,6 @@ func main() {
 			// 语音：我这有物资
 			sdl.K_i: []*scrcpy.PointMacro{{scrcpy.Point{2010, 358}, 100 * time.Millisecond},
 				{scrcpy.Point{1738, 233}, 0}},
-			// 打开团队语音（发出声音）
-			sdl.K_o: []*scrcpy.PointMacro{{scrcpy.Point{1748, 197}, 100 * time.Millisecond},
-				{scrcpy.Point{1577, 164}, 0}},
-			// 关闭团队语音（发出声音）
-			sdl.K_p: []*scrcpy.PointMacro{{scrcpy.Point{1752, 203}, 100 * time.Millisecond},
-				{scrcpy.Point{1654, 162}, 0}},
 		},
 		CtrlKeyMap: map[int]scrcpy.UserOperation{
 			// 准镜切换1
@@ -128,6 +122,12 @@ func main() {
 			sdl.K_6: &scrcpy.Point{1878, 692},
 			// 准镜切换7
 			sdl.K_7: &scrcpy.Point{1755, 811},
+			// 打开团队语音（发出声音）
+			sdl.K_q: []*scrcpy.PointMacro{{scrcpy.Point{1748, 197}, 100 * time.Millisecond},
+				{scrcpy.Point{1577, 164}, 0}},
+			// 关闭团队语音（发出声音）
+			sdl.K_e: []*scrcpy.PointMacro{{scrcpy.Point{1752, 203}, 100 * time.Millisecond},
+				{scrcpy.Point{1654, 162}, 0}},
 			// 打开团队语音（接收声音）
 			sdl.K_o: []*scrcpy.PointMacro{{scrcpy.Point{1748, 115}, 100 * time.Millisecond},
 				{scrcpy.Point{1546, 133}, 0}},
