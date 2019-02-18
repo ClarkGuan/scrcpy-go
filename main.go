@@ -2,12 +2,38 @@ package main
 
 import (
 	"flag"
+	"io/ioutil"
 	"log"
+	"path/filepath"
 	"time"
 
 	"github.com/ClarkGuan/go-sdl2/sdl"
 	"github.com/ClarkGuan/scrcpy-go/scrcpy"
+	"gopkg.in/yaml.v2"
 )
+
+type EntryFile struct {
+	Entries []*Entry `yaml:"keys"`
+}
+
+type Entry struct {
+	Code        string        `yaml:"code"`
+	Point       *EntryPoint   `yaml:"point"`
+	Comment     string        `yaml:"comment"`
+	Macro       []*EntryMacro `yaml:"macro"`
+	ShowPointer bool          `yaml:"show_pointer"`
+	Type        string        `yaml:"type"`
+}
+
+type EntryPoint struct {
+	X int `yaml:"x"`
+	Y int `yaml:"y"`
+}
+
+type EntryMacro struct {
+	Point *EntryPoint `yaml:"point"`
+	Delay int         `yaml:"delay"`
+}
 
 func main() {
 	log.Printf("SDL %d.%d.%d\n", sdl.MAJOR_VERSION, sdl.MINOR_VERSION, sdl.PATCHLEVEL)
@@ -16,137 +42,90 @@ func main() {
 	var bitRate int
 	var maxSize int
 	var port int
+	var settingFile string
 	flag.IntVar(&debugLevel, "log", 0, "日志等级设置")
 	flag.IntVar(&bitRate, "bitrate", 8000000, "视频码率")
 	flag.IntVar(&maxSize, "maxsize", 0, "未知")
 	flag.IntVar(&port, "port", 27183, "adb 端口号")
+	flag.StringVar(&settingFile, "config", filepath.Join(sdl.GetBasePath(), "res", "keys.yml"), "配置文件路径")
 	flag.Parse()
 
+	content, err := ioutil.ReadFile(settingFile)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var entryFile EntryFile
+	if err = yaml.Unmarshal(content, &entryFile); err != nil {
+		log.Fatalln(err)
+	}
+
+	keyMap, ctrlKeyMap := make(map[int]scrcpy.UserOperation), make(map[int]scrcpy.UserOperation)
+	mouseKeyMap := make(map[uint8]scrcpy.UserOperation)
+
+	for _, entry := range entryFile.Entries {
+		switch entry.Type {
+		case "":
+			if keyCode, ok := scrcpy.KeyCodeConstMap[entry.Code]; ok {
+				keyMap[keyCode] = parseUserOperation(entry)
+			} else {
+				keyCode = int(sdl.GetKeyFromName(entry.Code))
+				if keyCode == sdl.K_UNKNOWN {
+					log.Fatalln("unknown key code:", entry.Code)
+				}
+				keyMap[keyCode] = parseUserOperation(entry)
+			}
+
+		case "ctrl":
+			if keyCode, ok := scrcpy.KeyCodeConstMap[entry.Code]; ok {
+				ctrlKeyMap[keyCode] = parseUserOperation(entry)
+			} else {
+				keyCode = int(sdl.GetKeyFromName(entry.Code))
+				if keyCode == sdl.K_UNKNOWN {
+					log.Fatalln("unknown key code:", entry.Code)
+				}
+				ctrlKeyMap[keyCode] = parseUserOperation(entry)
+			}
+
+		case "mouse":
+			if keyCode, ok := scrcpy.MouseButtonMap[entry.Code]; ok {
+				mouseKeyMap[keyCode] = parseUserOperation(entry)
+			} else {
+				log.Fatalln("unknown mouse code:", entry.Code)
+			}
+
+		default:
+			panic("can't reach here")
+		}
+	}
+
 	option := scrcpy.Option{
-		Debug:   scrcpy.DebugLevelWrap(debugLevel),
-		BitRate: bitRate,
-		MaxSize: maxSize,
-		Port:    port,
-		KeyMap: map[int]scrcpy.UserOperation{
-			// 开火键
-			scrcpy.FireKeyCode: &scrcpy.Point{416, 86},
-			// 视野滑动事件左上坐标
-			scrcpy.VisionBoundTopLeft: &scrcpy.Point{650, 100},
-			// 视野滑动事件右下坐标
-			scrcpy.VisionBoundBottomRight: &scrcpy.Point{1200, 850},
-			// 方向键 前
-			scrcpy.FrontKeyCode: &scrcpy.Point{346, 689},
-			// 方向键 后
-			scrcpy.BackKeyCode: &scrcpy.Point{346, 913},
-			// 跳/紧急停车
-			sdl.K_SPACE: &scrcpy.Point{1883, 564},
-			// 趴/下车
-			sdl.K_c: &scrcpy.Point{1877, 413},
-			// 蹲/加速/下沉
-			sdl.K_LSHIFT: &scrcpy.Point{1716, 817},
-			// 换弹/投掷距离切换
-			sdl.K_r: &scrcpy.Point{1623, 1013},
-			// 准镜/喇叭
-			sdl.K_e: &scrcpy.Point{1995, 730},
-			// 左摆头
-			sdl.K_q: &scrcpy.Point{352, 395},
-			// 救人/上浮
-			sdl.K_z: &scrcpy.Point{1718, 638},
-			// 舔包
-			sdl.K_t: &scrcpy.SPoint{1444, 274},
-			// 打开/收起拾取列表
-			sdl.K_y: &scrcpy.Point{1520, 281},
-			// 拾取物品1
-			sdl.K_f: &scrcpy.Point{1447, 377},
-			// 拾取物品2
-			sdl.K_g: &scrcpy.Point{1447, 490},
-			// 拾取物品3
-			sdl.K_h: &scrcpy.Point{1447, 599},
-			// 拾取物品4
-			sdl.K_j: &scrcpy.Point{1395, 670},
-			// 开/关门
-			sdl.K_v: &scrcpy.Point{1424, 745},
-			// 1号武器
-			sdl.K_1: &scrcpy.Point{967, 983},
-			// 2号武器
-			sdl.K_2: &scrcpy.Point{1205, 977},
-			// 3号武器
-			sdl.K_3: &scrcpy.Point{1298, 907},
-			// 使用医疗物品
-			sdl.K_4: &scrcpy.Point{715, 1013},
-			// 使用投掷物品
-			sdl.K_5: &scrcpy.Point{1444, 1020},
-			// 打开医疗物品列表
-			sdl.K_6: &scrcpy.Point{715, 930},
-			// 打开投掷物品列表
-			sdl.K_7: &scrcpy.Point{1441, 930},
-			// 1号武器单发
-			sdl.K_b: &scrcpy.Point{950, 907},
-			// 2号武器单发
-			sdl.K_n: &scrcpy.Point{1162, 904},
-			// 背包列表
-			sdl.K_TAB: &scrcpy.SPoint{76, 1003},
-			// 地图
-			sdl.K_m: &scrcpy.SPoint{2020, 53},
-			// 打开准镜列表
-			sdl.K_x: &scrcpy.Point{2014, 450},
-			// 比例尺放大
-			sdl.K_COMMA: &scrcpy.Point{2008, 264},
-			// 比例尺缩小
-			sdl.K_PERIOD: &scrcpy.Point{2018, 825},
-			// 人物置中
-			sdl.K_SLASH: &scrcpy.Point{1885, 1021},
-			// 取消标记点
-			sdl.K_QUOTE: &scrcpy.Point{1477, 1015},
-			// 取消投掷
-			sdl.K_BACKQUOTE: &scrcpy.Point{662, 562},
-			// 准镜比例缩小
-			sdl.K_k: []*scrcpy.PointMacro{{scrcpy.Point{680, 217}, 100 * time.Millisecond},
-				{scrcpy.Point{680, 601}, 30 * time.Millisecond},
-				{scrcpy.Point{674, 223}, 0}},
-			// 准镜比例放大
-			sdl.K_l: []*scrcpy.PointMacro{{scrcpy.Point{678, 217}, 100 * time.Millisecond},
-				{scrcpy.Point{680, 327}, 30 * time.Millisecond},
-				{scrcpy.Point{678, 217}, 0}},
-			// 语音：前方有敌人
-			sdl.K_u: []*scrcpy.PointMacro{{scrcpy.Point{2010, 358}, 100 * time.Millisecond},
-				{scrcpy.Point{1720, 156}, 0}},
-			// 语音：我这有物资
-			sdl.K_i: []*scrcpy.PointMacro{{scrcpy.Point{2010, 358}, 100 * time.Millisecond},
-				{scrcpy.Point{1738, 233}, 0}},
-			// 打开团队语音（发出声音）
-			sdl.K_LEFTBRACKET: []*scrcpy.PointMacro{{scrcpy.Point{1748, 197}, 100 * time.Millisecond},
-				{scrcpy.Point{1577, 164}, 0}},
-			// 关闭团队语音（发出声音）
-			sdl.K_RIGHTBRACKET: []*scrcpy.PointMacro{{scrcpy.Point{1752, 203}, 100 * time.Millisecond},
-				{scrcpy.Point{1654, 162}, 0}},
-		},
-		CtrlKeyMap: map[int]scrcpy.UserOperation{
-			// 准镜切换1
-			sdl.K_1: &scrcpy.Point{1794, 457},
-			// 准镜切换2
-			sdl.K_2: &scrcpy.Point{1868, 460},
-			// 准镜切换3
-			sdl.K_3: &scrcpy.Point{1755, 576},
-			// 准镜切换4
-			sdl.K_4: &scrcpy.Point{1855, 573},
-			// 准镜切换5
-			sdl.K_5: &scrcpy.Point{1759, 695},
-			// 准镜切换6
-			sdl.K_6: &scrcpy.Point{1878, 692},
-			// 准镜切换7
-			sdl.K_7: &scrcpy.Point{1755, 811},
-			// 打开团队语音（接收声音）
-			sdl.K_LEFTBRACKET: []*scrcpy.PointMacro{{scrcpy.Point{1748, 115}, 100 * time.Millisecond},
-				{scrcpy.Point{1546, 133}, 0}},
-			// 关闭团队语音（接收声音）
-			sdl.K_RIGHTBRACKET: []*scrcpy.PointMacro{{scrcpy.Point{1755, 123}, 100 * time.Millisecond},
-				{scrcpy.Point{1616, 131}, 0}},
-		},
-		MouseKeyMap: map[uint8]scrcpy.UserOperation{
-			// 右摆头
-			sdl.BUTTON_RIGHT: &scrcpy.Point{507, 399},
-		},
+		Debug:       scrcpy.DebugLevelWrap(debugLevel),
+		BitRate:     bitRate,
+		MaxSize:     maxSize,
+		Port:        port,
+		KeyMap:      keyMap,
+		CtrlKeyMap:  ctrlKeyMap,
+		MouseKeyMap: mouseKeyMap,
 	}
 	log.Println(scrcpy.Main(&option))
+}
+
+func parseUserOperation(entry *Entry) scrcpy.UserOperation {
+	if entry.Point != nil {
+		if entry.ShowPointer {
+			return &scrcpy.SPoint{uint16(entry.Point.X), uint16(entry.Point.Y)}
+		} else {
+			return &scrcpy.Point{uint16(entry.Point.X), uint16(entry.Point.Y)}
+		}
+	} else if len(entry.Macro) > 0 {
+		var list []*scrcpy.PointMacro
+		for _, m := range entry.Macro {
+			list = append(list, &scrcpy.PointMacro{
+				Point:    scrcpy.Point{uint16(m.Point.X), uint16(m.Point.Y)},
+				Interval: time.Duration(m.Delay) * time.Millisecond})
+		}
+		return list
+	} else {
+		panic("can't reach here")
+	}
 }

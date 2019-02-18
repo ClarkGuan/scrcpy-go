@@ -17,7 +17,7 @@ const (
 	VisionBoundBottomRight
 	FrontKeyCode
 	BackKeyCode
-	WheelKeyCode
+	wheelKeyCode
 )
 
 const mouseAccuracy = .185
@@ -154,10 +154,10 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 	case eventWheelEvent:
 		var b bool
 		var e error
-		if ch.keyState[WheelKeyCode] != nil {
-			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[WheelKeyCode], ch.wheelCachePointer)
-			fingers.Recycle(ch.keyState[WheelKeyCode])
-			ch.keyState[WheelKeyCode] = nil
+		if ch.keyState[wheelKeyCode] != nil {
+			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[wheelKeyCode], ch.wheelCachePointer)
+			fingers.Recycle(ch.keyState[wheelKeyCode])
+			ch.keyState[wheelKeyCode] = nil
 		}
 		return b, e
 
@@ -408,6 +408,11 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 }
 
 func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) {
+	if event.Repeat > 0 {
+		// 减少事件传递，提升效率，降低传输数据量
+		return true, nil
+	}
+
 	alt := event.Keysym.Mod&(sdl.KMOD_RALT|sdl.KMOD_LALT) != 0
 	if alt {
 		return true, nil
@@ -578,11 +583,11 @@ func (ch *controlHandler) handleMouseWheelMotion(event *sdl.MouseWheelEvent) (bo
 	if debugOpt.Debug() {
 		log.Printf("x: %d, y: %d, direction: %d\n", event.X, event.Y, event.Direction)
 	}
-	if ch.keyState[WheelKeyCode] == nil {
-		ch.keyState[WheelKeyCode] = fingers.GetId()
+	if ch.keyState[wheelKeyCode] == nil {
+		ch.keyState[wheelKeyCode] = fingers.GetId()
 		ch.wheelCachePointer = *(ch.keyMap[sdl.K_g].(*Point))
 		ch.sendEventDelay(eventWheelEvent, 150*time.Millisecond)
-		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[WheelKeyCode], ch.wheelCachePointer)
+		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[wheelKeyCode], ch.wheelCachePointer)
 	} else {
 		deltaY := event.Y * 10
 		tmp := int32(ch.wheelCachePointer.Y) + deltaY
@@ -593,7 +598,7 @@ func (ch *controlHandler) handleMouseWheelMotion(event *sdl.MouseWheelEvent) (bo
 		}
 		ch.wheelCachePointer.Y = uint16(tmp)
 		ch.sendEventDelay(eventWheelEvent, 150*time.Millisecond)
-		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[WheelKeyCode], ch.wheelCachePointer)
+		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[wheelKeyCode], ch.wheelCachePointer)
 	}
 	return true, nil
 }
