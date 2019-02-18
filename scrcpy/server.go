@@ -244,7 +244,7 @@ func (svr *server) connectAndReadByte(timeout time.Duration) (err error) {
 
 func (svr *server) getLocalServerPath() string {
 	svr.localSvrPathOnce.Do(func() {
-		path := filepath.Join(sdl.GetBasePath(), "scrcpy-server.jar")
+		path := filepath.Join(sdl.GetBasePath(), "res", "scrcpy-server.jar")
 		if _, err := os.Stat(path); err == nil {
 			svr.localSvrPath = path
 		} else {

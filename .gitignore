@@ -76,4 +76,4 @@ fastlane/readme.md
 gradle
 gradlew*
 /scrcpy-go
-/scrcpy-server.jar
+/res
