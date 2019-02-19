@@ -1,5 +1,5 @@
 # scrcpy-go
-原版 scrcpy 是 Genymobile 公司出品的 Android 设备显示与操纵开源工具，具备投屏、控制、截图等功能。scrcpy-go 是在其基础上制作的方便进行手机游戏的辅助工具，类似 TC-Games 出品的软件。
+原版 [scrcpy](https://github.com/Genymobile/scrcpy) 是 Genymobile 公司出品的 Android 设备显示与操纵开源工具，具备投屏、控制、截图等功能。scrcpy-go 是在其基础上制作的方便进行手机游戏的辅助工具，类似 TC-Games 出品的软件。
 
 特别地，与 scrcpy 的主要不同点是：
 
