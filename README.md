@@ -61,7 +61,7 @@ scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -con
 
 ### 部分未解决问题
 
-1. VideoToolBox 解析视频大小不匹配的问题
+#### VideoToolBox 解析视频大小不匹配的问题
 
   H.264 格式要求视频大小符合 8 的倍数原则，所以在 Java 代码 Device#computeVideoSize() 里有专门计算 video size 的功能：
   
