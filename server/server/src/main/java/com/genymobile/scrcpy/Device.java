@@ -106,6 +106,7 @@ public final class Device {
         if (!videoSize.equals(screenSize)) {
             // The client sends a click relative to a video with wrong dimensions,
             // the device may have been rotated since the event was generated, so ignore the event
+            System.err.println("videoSize:" + videoSize + " screenSize:" + screenSize);
             return null;
         }
         Rect contentRect = screenInfo.getContentRect();
