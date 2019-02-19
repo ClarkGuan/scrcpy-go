@@ -20,11 +20,11 @@ keys:
   - { code: V, point: { x: 1424, y: 745 }, comment: "开/关门" }
   - { code: "1", point: { x: 967, y: 983 }, comment: "1号武器" }
   - { code: "2", point: { x: 1205, y: 977 }, comment: "2号武器" }
-  - { code: "3", point: { x: 1298, y: 907 }, comment: "副武器" }
-  - { code: "4", point: { x: 715, y: 1013 }, comment: "使用医疗物品" }
-  - { code: "5", point: { x: 1444, y: 1020 }, comment: "使用投掷物品" }
-  - { code: "6", point: { x: 715, y: 930 }, comment: "打开医疗物品列表" }
-  - { code: "7", point: { x: 1441, y: 930 }, comment: "打开投掷物品列表" }
+  - { code: "3", point: { x: 715, y: 1013 }, comment: "使用医疗物品" }
+  - { code: "4", point: { x: 1444, y: 1020 }, comment: "使用投掷物品" }
+  - { code: "5", point: { x: 715, y: 930 }, comment: "打开医疗物品列表" }
+  - { code: "6", point: { x: 1441, y: 930 }, comment: "打开投掷物品列表" }
+  - { code: "7", point: { x: 1298, y: 907 }, comment: "副武器" }
   - { code: B, point: { x: 950, y: 907 }, comment: "1号武器单发" }
   - { code: N, point: { x: 1162, y: 904 }, comment: "2号武器单发" }
   - { code: Tab, point: { x: 76, y: 1003 }, show_pointer: true, comment: "背包列表" }
