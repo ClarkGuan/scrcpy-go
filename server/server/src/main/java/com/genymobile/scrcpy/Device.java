@@ -73,8 +73,10 @@ public final class Device {
         // - scale down the great side of the screen to maxSize (if necessary);
         // - scale down the other side so that the aspect ratio is preserved;
         // - round this value to the nearest multiple of 8 (H.264 only accepts multiples of 8)
+        System.err.printf("computeVideoSize() (%d, %d) => ", w, h);
         w &= ~7; // in case it's not a multiple of 8
         h &= ~7;
+        System.err.printf("(%d, %d)\n", w, h);
         if (maxSize > 0) {
             if (BuildConfig.DEBUG && maxSize % 8 != 0) {
                 throw new AssertionError("Max size must be a multiple of 8");
