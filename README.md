@@ -40,7 +40,7 @@ scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -con
 ### 配置文件
 [res/keys.yml](res/keys.yml) 是默认的配置文件所在位置。其内容是作者在使用小米 8 玩刺激战场时配置的数值，可以根据自身机型和爱好自定义配置（而且不局限于射击类手游）。
 
-#### 属性讲解：
+#### 属性说明
 1. code：对应 SDL 内键盘映射的[字符串值](https://wiki.libsdl.org/SDL_Keycode?highlight=%28%5CbCategoryEnum%5Cb%29%7C%28CategoryKeyboard%29)。特别地，以 SCRCPY_ 开头的是作者自定义的常量值，为了完成一些特定的功能（与射击类游戏相关），具体细节可以参看代码实现。另，SDL 中不存在使用字符串反查鼠标按键的功能，所以将鼠标按键映射的字符串都是作者自定义的（BUTTON_LEFT、BUTTON_MIDDLE、BUTTON_RIGHT、BUTTON_X1、BUTTON_X2）。
 2. point：屏幕坐标映射。
 3. macro：宏定义，可以是一系列坐标点事件。
