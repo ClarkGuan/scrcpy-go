@@ -11,7 +11,7 @@ keys:
   - { code: E, point: { x: 1995, y: 730 }, comment: "准镜/喇叭" }
   - { code: Q, point: { x: 352, y: 395 }, comment: "左摆头" }
   - { code: Z, point: { x: 1718, y: 638 }, comment: "救人/上浮" }
-  - { code: T, point: { x: 1444, y: 274 }, show_pointer: true, comment: "舔包" }
+  - { code: T, point: { x: 1444, y: 274 }, comment: "舔包" }
   - { code: Y, point: { x: 1520, y: 281 }, comment: "打开/收起拾取列表" }
   - { code: F, point: { x: 1447, y: 377 }, comment: "拾取物品1" }
   - { code: G, point: { x: 1447, y: 490 }, comment: "拾取物品2" }
