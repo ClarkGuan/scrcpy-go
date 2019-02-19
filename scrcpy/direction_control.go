@@ -16,9 +16,10 @@ const (
 	rightDirection
 )
 
-// 斜上 70，正上 150
-const deltaDirectionObliqueMovement = 80
-const deltaDirectionRightUpMovement = 150
+// TODO 小米 8：斜上 80，正上 150
+// TODO 三星 s6 edge+：斜上 90，正上 185
+const deltaDirectionObliqueMovement = 90
+const deltaDirectionRightUpMovement = 185
 
 type directionController struct {
 	direction   Direction
