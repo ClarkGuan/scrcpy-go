@@ -17,6 +17,7 @@ type Option struct {
 	KeyMap      map[int]UserOperation
 	CtrlKeyMap  map[int]UserOperation
 	MouseKeyMap map[uint8]UserOperation
+	VideoSize   string
 }
 
 func Main(opt *Option) (err error) {
@@ -27,7 +28,8 @@ func Main(opt *Option) (err error) {
 
 	svr := server{}
 	svrOpt := serverOption{serial: opt.Serial, localPort: opt.Port,
-		maxSize: opt.MaxSize, bitRate: opt.BitRate, crop: opt.Crop}
+		maxSize: opt.MaxSize, bitRate: opt.BitRate, crop: opt.Crop,
+		videoSize: opt.VideoSize}
 
 	if err = svr.Start(&svrOpt); err != nil {
 		return

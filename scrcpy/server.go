@@ -28,6 +28,7 @@ type serverOption struct {
 	maxSize   int
 	bitRate   int
 	crop      string
+	videoSize string
 }
 
 type server struct {
@@ -195,7 +196,9 @@ func (svr *server) execute() (err error) {
 		fmt.Sprintf("%d", svr.maxSize),
 		fmt.Sprintf("%d", svr.bitRate),
 		fmt.Sprintf("%v", svr.tunnelForward),
-		svr.crop)
+		fmt.Sprintf("\"%s\"", svr.crop),
+		"false",
+		fmt.Sprintf("\"%s\"", svr.videoSize))
 	return
 }
 

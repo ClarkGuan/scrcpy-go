@@ -1,5 +1,6 @@
 package com.genymobile.scrcpy;
 
+import android.graphics.Point;
 import android.graphics.Rect;
 
 public class Options {
@@ -8,6 +9,7 @@ public class Options {
     private boolean tunnelForward;
     private Rect crop;
     private boolean sendFrameMeta; // send PTS so that the client may record properly
+    private Point correctedValue;
 
     public int getMaxSize() {
         return maxSize;
@@ -47,5 +49,13 @@ public class Options {
 
     public void setSendFrameMeta(boolean sendFrameMeta) {
         this.sendFrameMeta = sendFrameMeta;
+    }
+
+    public Point getCorrectedValue() {
+        return correctedValue;
+    }
+
+    public void setCorrectedValue(Point correctedValue) {
+        this.correctedValue = correctedValue;
     }
 }

@@ -1,9 +1,9 @@
 package com.genymobile.scrcpy;
 
+import android.graphics.Point;
 import android.graphics.Rect;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 public final class Server {
 
@@ -78,7 +78,25 @@ public final class Server {
         boolean sendFrameMeta = Boolean.parseBoolean(args[4]);
         options.setSendFrameMeta(sendFrameMeta);
 
+        if (args.length < 6) {
+            return options;
+        }
+        Point p = parsePoint(args[5]);
+        options.setCorrectedValue(p);
+
         return options;
+    }
+
+    private static Point parsePoint(String p) {
+        if (p.isEmpty()) {
+            return null;
+        }
+        // input format: "x:y"
+        String[] tokens = p.split(":");
+        if (tokens.length != 2) {
+            throw new IllegalArgumentException("CorrectedValue must contains 2 values separated by colons: \"" + p + "\"");
+        }
+        return new Point(Integer.parseInt(tokens[0]), Integer.parseInt(tokens[1]));
     }
 
     private static Rect parseCrop(String crop) {

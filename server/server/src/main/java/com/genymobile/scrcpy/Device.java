@@ -21,7 +21,7 @@ public final class Device {
     private RotationListener rotationListener;
 
     public Device(Options options) {
-        screenInfo = computeScreenInfo(options.getCrop(), options.getMaxSize());
+        screenInfo = computeScreenInfo(options.getCrop(), options.getMaxSize(), options.getCorrectedValue());
         registerRotationWatcher(new IRotationWatcher.Stub() {
             @Override
             public void onRotationChanged(int rotation) throws RemoteException {
@@ -41,7 +41,7 @@ public final class Device {
         return screenInfo;
     }
 
-    private ScreenInfo computeScreenInfo(Rect crop, int maxSize) {
+    private ScreenInfo computeScreenInfo(Rect crop, int maxSize, Point correctedValue) {
         DisplayInfo displayInfo = serviceManager.getDisplayManager().getDisplayInfo();
         boolean rotated = (displayInfo.getRotation() & 1) != 0;
         Size deviceSize = displayInfo.getSize();
@@ -58,7 +58,7 @@ public final class Device {
             }
         }
 
-        Size videoSize = computeVideoSize(contentRect.width(), contentRect.height(), maxSize);
+        Size videoSize = computeVideoSize(contentRect.width(), contentRect.height(), maxSize, correctedValue);
         return new ScreenInfo(contentRect, videoSize, rotated);
     }
 
@@ -67,7 +67,7 @@ public final class Device {
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")
-    private static Size computeVideoSize(int w, int h, int maxSize) {
+    private static Size computeVideoSize(int w, int h, int maxSize, Point correctedValue) {
         // Compute the video size and the padding of the content inside this video.
         // Principle:
         // - scale down the great side of the screen to maxSize (if necessary);
@@ -95,8 +95,13 @@ public final class Device {
         }
 
         // TODO 使用 VideoToolBox 后计算的结果与之差值都是 8
-        w -= 8;
-        h -= 8;
+        if (correctedValue != null) {
+            w += correctedValue.x;
+            h += correctedValue.y;
+            System.err.printf("computeVideoSize() 修正之后的值 (%d, %d)\n", w, h);
+        } else {
+            System.err.printf("computeVideoSize() 没有修正值\n");
+        }
         return new Size(w, h);
     }
 

@@ -43,11 +43,13 @@ func main() {
 	//var maxSize int
 	var port int
 	var settingFile string
+	var correctedValue string
 	flag.IntVar(&debugLevel, "log", 0, "日志等级设置")
 	flag.IntVar(&bitRate, "bitrate", 8000000, "视频码率")
 	//flag.IntVar(&maxSize, "maxsize", 0, "未知")
 	flag.IntVar(&port, "port", 27183, "adb 端口号")
 	flag.StringVar(&settingFile, "config", filepath.Join(sdl.GetBasePath(), "res", "keys.yml"), "配置文件路径")
+	flag.StringVar(&correctedValue, "video_size", "", "视频大小修正值")
 	flag.Parse()
 
 	content, err := ioutil.ReadFile(settingFile)
@@ -102,6 +104,7 @@ func main() {
 		Debug:       scrcpy.DebugLevelWrap(debugLevel),
 		BitRate:     bitRate,
 		MaxSize:     0,
+		VideoSize:   correctedValue,
 		Port:        port,
 		KeyMap:      keyMap,
 		CtrlKeyMap:  ctrlKeyMap,
