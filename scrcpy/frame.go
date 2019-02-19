@@ -51,7 +51,11 @@ func (af avFrame) data(i int) (ret []byte) {
 	p := (*reflect.SliceHeader)(unsafe.Pointer(&ret))
 	p.Data = uintptr(unsafe.Pointer(tmp.data[C.int(i)]))
 	lineSize := af.lineSize(i)
-	p.Len = lineSize * af.height()
+	if i == 1 {
+		p.Len = (lineSize * af.height()) >> 1
+	} else {
+		p.Len = lineSize * af.height()
+	}
 	p.Cap = p.Len
 	return
 }
@@ -70,7 +74,7 @@ func (af avFrame) copy(b []byte) []byte {
 		b = make([]byte, len(buf1)+len(buf2))
 	}
 	n := copy(b, buf1)
-	copy(b[n:], buf2) // FIXME 有概率会 crash，暂不知原因
+	copy(b[n:], buf2)
 	return b
 }
 
