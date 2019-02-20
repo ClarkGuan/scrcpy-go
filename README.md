@@ -26,7 +26,7 @@ go get github.com/ClarkGuan/scrcpy-go
 
 ### 使用说明
 ```bash
-scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -config {keys.yml 配置文件路径}
+scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -config {settings.yml 配置文件路径}
 ```
 
 一般情况下，直接双击 `scrcpy-go` 即可；如果想要查看日志信息可以使用 `scrcpy-go -log 4` 查看具体日志输出。
@@ -35,10 +35,10 @@ scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -con
 * log: 0
 * bitrate: 8000000
 * port: 27183
-* config: scrcpy-go 所在目录下 res/keys.yml
+* cfg: scrcpy-go 所在目录下 res/settings.yml
 
 ### 配置文件
-[res/keys.yml](res/keys-s6edge.yml) 是默认的配置文件所在位置。其内容是作者在玩刺激战场时配置的数值，可以根据自身机型和爱好自定义配置（而且不局限于射击类手游）。
+[res/settings.yml](res/settings-s6edge.yml) 是默认的配置文件所在位置。其内容是作者在玩刺激战场时配置的数值，可以根据自身机型和爱好自定义配置（而且不局限于射击类手游）。
 
 #### 属性说明
 1. code：对应 SDL 内键盘映射的[字符串值](https://wiki.libsdl.org/SDL_Keycode?highlight=%28%5CbCategoryEnum%5Cb%29%7C%28CategoryKeyboard%29)。特别地，以 SCRCPY_ 开头的是作者自定义的常量值，为了完成一些特定的功能（与射击类游戏相关），具体细节可以参看代码实现。另，SDL 中不存在使用字符串反查鼠标按键的功能，所以将鼠标按键映射的字符串都是作者自定义的（BUTTON_LEFT、BUTTON_MIDDLE、BUTTON_RIGHT、BUTTON_X1、BUTTON_X2）。
@@ -78,10 +78,10 @@ scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -con
   ```
   
   显然，代码在计算小于等于原值的最大的 8 的倍数。但是 VideoToolBox 在处理小米 8 的时候却得到了不同的结果：Java 代码结果为 (1080, 2248)，VideoToolBox 解析后结果为 (1072, 2240)。目前原因未知。
-  针对小米 8 这种情况，特增加选项 `video_size` 用于修正这个问题。例如
+  针对小米 8 这种情况，特增加选项 `vs` 用于修正这个问题。例如
   
   ```bash
-  scrcpy-go -video_size "-8:-8"
+  scrcpy-go -vs "-8:-8"
   ```
   
   其中 `"-8:-8"` 表示 width 和 height 分别减去 8 个像素的值。

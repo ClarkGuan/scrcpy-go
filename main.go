@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"github.com/ClarkGuan/go-sdl2/sdl"
@@ -14,6 +15,12 @@ import (
 
 type EntryFile struct {
 	Entries []*Entry `yaml:"keys"`
+	Args    []*Arg   `yaml:"args"`
+}
+
+type Arg struct {
+	Name  string `yaml:"name"`
+	Value string `yaml:"value"`
 }
 
 type Entry struct {
@@ -40,16 +47,15 @@ func main() {
 
 	var debugLevel int
 	var bitRate int
-	//var maxSize int
 	var port int
 	var settingFile string
 	var correctedValue string
+
 	flag.IntVar(&debugLevel, "log", 0, "日志等级设置")
 	flag.IntVar(&bitRate, "bitrate", 8000000, "视频码率")
-	//flag.IntVar(&maxSize, "maxsize", 0, "未知")
 	flag.IntVar(&port, "port", 27183, "adb 端口号")
-	flag.StringVar(&settingFile, "config", filepath.Join(sdl.GetBasePath(), "res", "keys.yml"), "配置文件路径")
-	flag.StringVar(&correctedValue, "video_size", "", "视频大小修正值")
+	flag.StringVar(&settingFile, "cfg", filepath.Join(sdl.GetBasePath(), "res", "settings.yml"), "配置文件路径")
+	flag.StringVar(&correctedValue, "vs", "", "视频大小修正值")
 	flag.Parse()
 
 	content, err := ioutil.ReadFile(settingFile)
@@ -97,6 +103,22 @@ func main() {
 
 		default:
 			panic("can't reach here")
+		}
+	}
+
+	for _, arg := range entryFile.Args {
+		switch arg.Name {
+		case "log":
+			debugLevel, _ = strconv.Atoi(arg.Value)
+
+		case "bitrate":
+			bitRate, _ = strconv.Atoi(arg.Value)
+
+		case "port":
+			port, _ = strconv.Atoi(arg.Value)
+
+		case "vs":
+			correctedValue = arg.Value
 		}
 	}
 
