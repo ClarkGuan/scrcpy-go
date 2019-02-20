@@ -22,12 +22,12 @@ func (kce *keyCodeEvent) EventType() controlEventType {
 
 func (kce *keyCodeEvent) Serialize(w io.Writer, data ...interface{}) error {
 	buf := eventBufPool.Get().([]byte)
-	defer eventBufPool.Put(buf)
 	buf[0] = byte(kce.EventType())
 	buf[1] = byte(kce.action)
 	binary.BigEndian.PutUint32(buf[2:], uint32(kce.keyCode))
 	binary.BigEndian.PutUint32(buf[6:], uint32(kce.metaState))
 	_, err := w.Write(buf)
+	eventBufPool.Put(buf)
 	return err
 }
 
