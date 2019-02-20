@@ -50,14 +50,21 @@ scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -con
 7. comment：注释。
 
 #### 特殊功能
-1. ctrl + x：切换鼠标状态
-2. ctrl + 0：重置开火状态为默认（无连按效果）
-3. ctrl + -：前一个开火状态设置
-4. ctrl + =：后一个开火状态设置
-5. option + 1：第 1 个开火状态设置（连按间隔为 30ms）
-6. option + 2：第 2 个开火状态设置（连按间隔为 120ms）
-7. option + 3：第 3 个开火状态设置（连按间隔为 200ms）
-8. option + 4：第 4 个开火状态设置（连按间隔为 300ms）
+1. ctrl + h：点击 Home
+2. ctrl + b：点击 Back
+3. ctrl + m：点击 Menu
+4. ctrl + p：点击 Power
+5. ctrl + s：点击 App Switch
+6. ctrl + [：音量放大
+7. ctrl + ]：音量缩小
+8. ctrl + x：切换鼠标状态
+9. ctrl + 0：重置开火状态为默认（无连按效果）
+10. ctrl + -：前一个开火状态设置
+11. ctrl + =：后一个开火状态设置
+12. option + 1：第 1 个开火状态设置（连按间隔为 30ms）
+13. option + 2：第 2 个开火状态设置（连按间隔为 120ms）
+14. option + 3：第 3 个开火状态设置（连按间隔为 200ms）
+15. option + 4：第 4 个开火状态设置（连按间隔为 300ms）
 
 ### 部分未解决问题
 

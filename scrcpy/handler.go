@@ -419,6 +419,64 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 	}
 	ctrl := event.Keysym.Mod&(sdl.KMOD_RCTRL|sdl.KMOD_LCTRL) != 0
 	if ctrl {
+		switch event.Keysym.Sym {
+		case sdl.K_h:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_DOWN,
+				keyCode: AKEYCODE_HOME,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_b:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_DOWN,
+				keyCode: AKEYCODE_BACK,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_s:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_DOWN,
+				keyCode: AKEYCODE_APP_SWITCH,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_p:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_DOWN,
+				keyCode: AKEYCODE_POWER,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_m:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_DOWN,
+				keyCode: AKEYCODE_MENU,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_LEFTBRACKET:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_DOWN,
+				keyCode: AKEYCODE_VOLUME_UP,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_RIGHTBRACKET:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_DOWN,
+				keyCode: AKEYCODE_VOLUME_DOWN,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+		}
+
 		keyCode := int(event.Keysym.Sym)
 		if ch.ctrlKeyMap[keyCode] != nil {
 			if p, ok := ch.ctrlKeyMap[keyCode].(*Point); ok {
@@ -499,6 +557,62 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 	if ctrl {
 		// ctrl+x, ctrl+0, ctrl+-, ctrl+= 按键不允许自定义按键覆盖
 		switch event.Keysym.Sym {
+		case sdl.K_h:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_UP,
+				keyCode: AKEYCODE_HOME,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_b:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_UP,
+				keyCode: AKEYCODE_BACK,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_s:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_UP,
+				keyCode: AKEYCODE_APP_SWITCH,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_p:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_UP,
+				keyCode: AKEYCODE_POWER,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_m:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_UP,
+				keyCode: AKEYCODE_MENU,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_LEFTBRACKET:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_UP,
+				keyCode: AKEYCODE_VOLUME_UP,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
+		case sdl.K_RIGHTBRACKET:
+			kce := keyCodeEvent{
+				action:  AKEY_EVENT_ACTION_UP,
+				keyCode: AKEYCODE_VOLUME_DOWN,
+			}
+			ch.controller.PushEvent(&kce)
+			return true, nil
+
 		case sdl.K_x:
 			sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
 			return true, nil
