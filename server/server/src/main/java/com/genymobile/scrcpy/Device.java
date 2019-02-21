@@ -1,13 +1,13 @@
 package com.genymobile.scrcpy;
 
-import com.genymobile.scrcpy.wrappers.ServiceManager;
-
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
 import android.os.RemoteException;
 import android.view.IRotationWatcher;
 import android.view.InputEvent;
+
+import com.genymobile.scrcpy.wrappers.ServiceManager;
 
 public final class Device {
 
@@ -110,16 +110,23 @@ public final class Device {
         @SuppressWarnings("checkstyle:HiddenField")
         ScreenInfo screenInfo = getScreenInfo(); // read with synchronization
         Size videoSize = screenInfo.getVideoSize();
-        if (!videoSize.equals(screenSize)) {
+        if (!videoSize.equals(screenSize) &&
+                (videoSize.getWidth() != screenSize.getHeight() || videoSize.getHeight() != screenSize.getWidth())) {
             // The client sends a click relative to a video with wrong dimensions,
             // the device may have been rotated since the event was generated, so ignore the event
             System.err.println("videoSize:" + videoSize + " screenSize:" + screenSize);
             return null;
         }
         Rect contentRect = screenInfo.getContentRect();
-        int scaledX = contentRect.left + point.x * contentRect.width() / videoSize.getWidth();
-        int scaledY = contentRect.top + point.y * contentRect.height() / videoSize.getHeight();
-        return new Point(scaledX, scaledY);
+        if (contentRect.width() == videoSize.getWidth() &&
+                contentRect.height() == videoSize.getHeight() &&
+                contentRect.left == 0 &&
+                contentRect.top == 0) {
+            return point;
+        }
+        point.x = contentRect.left + point.x * contentRect.width() / videoSize.getWidth();
+        point.y = contentRect.top + point.y * contentRect.height() / videoSize.getHeight();
+        return point;
     }
 
     public static String getDeviceName() {
