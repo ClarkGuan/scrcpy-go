@@ -26,7 +26,7 @@ go get github.com/ClarkGuan/scrcpy-go
 
 ### 使用说明
 ```bash
-scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -config {settings.yml 配置文件路径}
+scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -cfg {settings.yml 配置文件路径}
 ```
 
 一般情况下，直接双击 `scrcpy-go` 即可；如果想要查看日志信息可以使用 `scrcpy-go -log 4` 查看具体日志输出。
