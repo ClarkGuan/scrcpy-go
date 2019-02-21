@@ -460,7 +460,7 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 			ch.controller.PushEvent(&kce)
 			return true, nil
 
-		case sdl.K_COMMA:
+		case sdl.K_SEMICOLON:
 			kce := keyCodeEvent{
 				action:  AKEY_EVENT_ACTION_DOWN,
 				keyCode: AKEYCODE_VOLUME_UP,
@@ -468,7 +468,7 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 			ch.controller.PushEvent(&kce)
 			return true, nil
 
-		case sdl.K_PERIOD:
+		case sdl.K_QUOTE:
 			kce := keyCodeEvent{
 				action:  AKEY_EVENT_ACTION_DOWN,
 				keyCode: AKEYCODE_VOLUME_DOWN,
@@ -597,7 +597,7 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			ch.controller.PushEvent(&kce)
 			return true, nil
 
-		case sdl.K_COMMA:
+		case sdl.K_SEMICOLON:
 			kce := keyCodeEvent{
 				action:  AKEY_EVENT_ACTION_UP,
 				keyCode: AKEYCODE_VOLUME_UP,
@@ -605,7 +605,7 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			ch.controller.PushEvent(&kce)
 			return true, nil
 
-		case sdl.K_PERIOD:
+		case sdl.K_QUOTE:
 			kce := keyCodeEvent{
 				action:  AKEY_EVENT_ACTION_UP,
 				keyCode: AKEYCODE_VOLUME_DOWN,

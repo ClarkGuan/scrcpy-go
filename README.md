@@ -55,8 +55,8 @@ scrcpy-go -log {日志等级} -bitrate {H.264 码率} -port {adb 端口号} -cfg
 3. ctrl + m：点击 Menu
 4. ctrl + p：点击 Power
 5. ctrl + s：点击 App Switch
-6. ctrl + ,：音量放大
-7. ctrl + .：音量缩小
+6. ctrl + ;：音量放大
+7. ctrl + '：音量缩小
 8. ctrl + x：切换鼠标状态
 9. ctrl + 0：重置开火状态为默认（无连按效果）
 10. ctrl + -：前一个开火状态设置
