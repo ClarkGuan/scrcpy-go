@@ -32,15 +32,15 @@ func adbReverseRemove(serial, sockName string) error {
 		fmt.Sprintf("localabstract:%s", sockName))
 }
 
-func adbForward(serial string, locaoPort int, sockName string) error {
+func adbForward(serial string, localPort int, sockName string) error {
 	return adbExec(serial, "forward",
-		fmt.Sprintf("tcp:%d", locaoPort),
+		fmt.Sprintf("tcp:%d", localPort),
 		fmt.Sprintf("localabstract:%s", sockName))
 }
 
-func adbForwardRemove(serial string, locaoPort int) error {
+func adbForwardRemove(serial string, localPort int) error {
 	return adbExec(serial, "forward", "--remove",
-		fmt.Sprintf("tcp:%d", locaoPort))
+		fmt.Sprintf("tcp:%d", localPort))
 }
 
 func adbExec(serial string, params ...string) error {
