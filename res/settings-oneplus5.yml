@@ -4,8 +4,8 @@ keys:
   - { code: SCRCPY_FIRE, point: { x: 288, y: 79 }, comment: "开火键" }
   - { code: SCRCPY_VISION_TOPLEFT, point: { x: 565, y: 96 }, comment: "视野滑动事件左上坐标" }
   - { code: SCRCPY_VISION_BOTTOMRIGHT, point: { x: 1419, y: 820 }, comment: "视野滑动事件右下坐标" }
-  - { code: SCRCPY_FRONT, point: { x: 234, y: 687 }, comment: "方向键 前" }
-  - { code: SCRCPY_BACK, point: { x: 234, y: 919 }, comment: "方向键 后" }
+  - { code: SCRCPY_FRONT, point: { x: 313, y: 690 }, comment: "方向键 前" }
+  - { code: SCRCPY_BACK, point: { x: 313, y: 919 }, comment: "方向键 后" }
   - { code: Space, point: { x: 1739, y: 568 }, comment: "跳/紧急停车" }
   - { code: C, point: { x: 1733, y: 415 }, comment: "趴/下车" }
   - { code: "Left Shift", point: { x: 1572, y: 831 }, comment: "蹲/加速/下沉" }
