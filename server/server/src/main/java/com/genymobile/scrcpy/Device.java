@@ -21,7 +21,7 @@ public final class Device {
     private RotationListener rotationListener;
 
     public Device(Options options) {
-        screenInfo = computeScreenInfo(options.getCrop(), options.getMaxSize(), options.getCorrectedValue());
+        screenInfo = computeScreenInfo();
         registerRotationWatcher(new IRotationWatcher.Stub() {
             @Override
             public void onRotationChanged(int rotation) throws RemoteException {
@@ -41,91 +41,91 @@ public final class Device {
         return screenInfo;
     }
 
-    private ScreenInfo computeScreenInfo(Rect crop, int maxSize, Point correctedValue) {
+    private ScreenInfo computeScreenInfo() {
         DisplayInfo displayInfo = serviceManager.getDisplayManager().getDisplayInfo();
         boolean rotated = (displayInfo.getRotation() & 1) != 0;
         Size deviceSize = displayInfo.getSize();
         Rect contentRect = new Rect(0, 0, deviceSize.getWidth(), deviceSize.getHeight());
-        if (crop != null) {
-            if (rotated) {
-                // the crop (provided by the user) is expressed in the natural orientation
-                crop = flipRect(crop);
-            }
-            if (!contentRect.intersect(crop)) {
-                // intersect() changes contentRect so that it is intersected with crop
-                Ln.w("Crop rectangle (" + formatCrop(crop) + ") does not intersect device screen (" + formatCrop(deviceSize.toRect()) + ")");
-                contentRect = new Rect(); // empty
-            }
-        }
+//        if (crop != null) {
+//            if (rotated) {
+//                // the crop (provided by the user) is expressed in the natural orientation
+//                crop = flipRect(crop);
+//            }
+//            if (!contentRect.intersect(crop)) {
+//                // intersect() changes contentRect so that it is intersected with crop
+//                Ln.w("Crop rectangle (" + formatCrop(crop) + ") does not intersect device screen (" + formatCrop(deviceSize.toRect()) + ")");
+//                contentRect = new Rect(); // empty
+//            }
+//        }
 
-        Size videoSize = computeVideoSize(contentRect.width(), contentRect.height(), maxSize, correctedValue);
+        Size videoSize = computeVideoSize(contentRect.width(), contentRect.height());
         return new ScreenInfo(contentRect, videoSize, rotated);
     }
 
-    private static String formatCrop(Rect rect) {
-        return rect.width() + ":" + rect.height() + ":" + rect.left + ":" + rect.top;
-    }
+//    private static String formatCrop(Rect rect) {
+//        return rect.width() + ":" + rect.height() + ":" + rect.left + ":" + rect.top;
+//    }
 
     @SuppressWarnings("checkstyle:MagicNumber")
-    private static Size computeVideoSize(int w, int h, int maxSize, Point correctedValue) {
+    private static Size computeVideoSize(int w, int h) {
         // Compute the video size and the padding of the content inside this video.
         // Principle:
         // - scale down the great side of the screen to maxSize (if necessary);
         // - scale down the other side so that the aspect ratio is preserved;
         // - round this value to the nearest multiple of 8 (H.264 only accepts multiples of 8)
-        System.err.printf("computeVideoSize() (%d, %d) => ", w, h);
+        StringBuilder sb = new StringBuilder(String.format("computeVideoSize() (%d, %d) => ", w, h));
         w &= ~7; // in case it's not a multiple of 8
         h &= ~7;
-        System.err.printf("(%d, %d)\n", w, h);
-        if (maxSize > 0) {
-            if (BuildConfig.DEBUG && maxSize % 8 != 0) {
-                throw new AssertionError("Max size must be a multiple of 8");
-            }
-            boolean portrait = h > w;
-            int major = portrait ? h : w;
-            int minor = portrait ? w : h;
-            if (major > maxSize) {
-                int minorExact = minor * maxSize / major;
-                // +4 to round the value to the nearest multiple of 8
-                minor = (minorExact + 4) & ~7;
-                major = maxSize;
-            }
-            w = portrait ? minor : major;
-            h = portrait ? major : minor;
-        }
+        sb.append(String.format("(%d, %d)", w, h));
+        System.err.println(sb.toString());
+//        if (maxSize > 0) {
+//            if (BuildConfig.DEBUG && maxSize % 8 != 0) {
+//                throw new AssertionError("Max size must be a multiple of 8");
+//            }
+//            boolean portrait = h > w;
+//            int major = portrait ? h : w;
+//            int minor = portrait ? w : h;
+//            if (major > maxSize) {
+//                int minorExact = minor * maxSize / major;
+//                // +4 to round the value to the nearest multiple of 8
+//                minor = (minorExact + 4) & ~7;
+//                major = maxSize;
+//            }
+//            w = portrait ? minor : major;
+//            h = portrait ? major : minor;
+//        }
 
-        // TODO 使用 VideoToolBox 后计算的结果与之差值都是 8
-        if (correctedValue != null) {
-            w += correctedValue.x;
-            h += correctedValue.y;
-            System.err.printf("computeVideoSize() 修正之后的值 (%d, %d)\n", w, h);
-        } else {
-            System.err.printf("computeVideoSize() 没有修正值\n");
-        }
+//        if (correctedValue != null) {
+//            w += correctedValue.x;
+//            h += correctedValue.y;
+//            System.err.printf("computeVideoSize() 修正之后的值 (%d, %d)\n", w, h);
+//        } else {
+//            System.err.printf("computeVideoSize() 没有修正值\n");
+//        }
         return new Size(w, h);
     }
 
     public Point getPhysicalPoint(Point point, Size screenSize) {
         // it hides the field on purpose, to read it with a lock
-        @SuppressWarnings("checkstyle:HiddenField")
+//        @SuppressWarnings("checkstyle:HiddenField")
         ScreenInfo screenInfo = getScreenInfo(); // read with synchronization
-        Size videoSize = screenInfo.getVideoSize();
-        if (!videoSize.equals(screenSize) &&
-                (videoSize.getWidth() != screenSize.getHeight() || videoSize.getHeight() != screenSize.getWidth())) {
-            // The client sends a click relative to a video with wrong dimensions,
-            // the device may have been rotated since the event was generated, so ignore the event
-            System.err.println("videoSize:" + videoSize + " screenSize:" + screenSize);
-            return null;
-        }
+//        Size videoSize = screenInfo.getVideoSize();
+//        if (!videoSize.equals(screenSize) &&
+//                (videoSize.getWidth() != screenSize.getHeight() || videoSize.getHeight() != screenSize.getWidth())) {
+//            // The client sends a click relative to a video with wrong dimensions,
+//            // the device may have been rotated since the event was generated, so ignore the event
+//            System.err.println("videoSize:" + videoSize + " screenSize:" + screenSize);
+//            return null;
+//        }
         Rect contentRect = screenInfo.getContentRect();
-        if (contentRect.width() == videoSize.getWidth() &&
-                contentRect.height() == videoSize.getHeight() &&
+        if (contentRect.width() == screenSize.getWidth() &&
+                contentRect.height() == screenSize.getHeight() &&
                 contentRect.left == 0 &&
                 contentRect.top == 0) {
             return point;
         }
-        point.x = contentRect.left + point.x * contentRect.width() / videoSize.getWidth();
-        point.y = contentRect.top + point.y * contentRect.height() / videoSize.getHeight();
+        point.x = contentRect.left + point.x * contentRect.width() / screenSize.getWidth();
+        point.y = contentRect.top + point.y * contentRect.height() / screenSize.getHeight();
         return point;
     }
 

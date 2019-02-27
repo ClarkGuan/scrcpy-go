@@ -91,6 +91,13 @@ type frame struct {
 	mutex                  sync.Mutex
 }
 
+func (f *frame) Size() *size {
+	if f.renderingFrame != 0 {
+		return &size{width: uint16(f.renderingFrame.width()), height: uint16(f.renderingFrame.height())}
+	}
+	return nil
+}
+
 func (f *frame) Init() error {
 	if f.decodingFrame = avFrame(unsafe.Pointer(C.av_frame_alloc())); f.decodingFrame == 0 {
 		return errAVAlloc

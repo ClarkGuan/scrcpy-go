@@ -25,10 +25,10 @@ type serverOption struct {
 	mainClass string
 	serial    string
 	localPort int
-	maxSize   int
-	bitRate   int
-	crop      string
-	videoSize string
+	//maxSize   int
+	bitRate int
+	//crop      string
+	//videoSize string
 }
 
 type server struct {
@@ -193,12 +193,9 @@ func (svr *server) execute() (err error) {
 		"app_process",
 		"/",
 		className,
-		fmt.Sprintf("%d", svr.maxSize),
 		fmt.Sprintf("%d", svr.bitRate),
 		fmt.Sprintf("%v", svr.tunnelForward),
-		fmt.Sprintf("\"%s\"", svr.crop),
-		"false",
-		fmt.Sprintf("\"%s\"", svr.videoSize))
+		"false")
 	return
 }
 

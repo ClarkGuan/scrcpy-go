@@ -1,5 +1,3 @@
-args:
-  - { name: vs, value: "-8:0" }
 keys:
   - { code: SCRCPY_FIRE, point: { x: 288, y: 79 }, comment: "开火键" }
   - { code: SCRCPY_VISION_TOPLEFT, point: { x: 565, y: 96 }, comment: "视野滑动事件左上坐标" }

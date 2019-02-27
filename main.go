@@ -125,8 +125,6 @@ func main() {
 	option := scrcpy.Option{
 		Debug:       scrcpy.DebugLevelWrap(debugLevel),
 		BitRate:     bitRate,
-		MaxSize:     0,
-		VideoSize:   correctedValue,
 		Port:        port,
 		KeyMap:      keyMap,
 		CtrlKeyMap:  ctrlKeyMap,

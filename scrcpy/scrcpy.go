@@ -8,16 +8,16 @@ import (
 )
 
 type Option struct {
-	Serial      string
-	Crop        string
-	Port        int
-	MaxSize     int
+	Serial string
+	//Crop        string
+	Port int
+	//MaxSize     int
 	BitRate     int
 	Debug       DebugLevel
 	KeyMap      map[int]UserOperation
 	CtrlKeyMap  map[int]UserOperation
 	MouseKeyMap map[uint8]UserOperation
-	VideoSize   string
+	//VideoSize   string
 }
 
 func Main(opt *Option) (err error) {
@@ -27,9 +27,7 @@ func Main(opt *Option) (err error) {
 	debugOpt = opt.Debug
 
 	svr := server{}
-	svrOpt := serverOption{serial: opt.Serial, localPort: opt.Port,
-		maxSize: opt.MaxSize, bitRate: opt.BitRate, crop: opt.Crop,
-		videoSize: opt.VideoSize}
+	svrOpt := serverOption{serial: opt.Serial, localPort: opt.Port, bitRate: opt.BitRate}
 
 	if err = svr.Start(&svrOpt); err != nil {
 		return
