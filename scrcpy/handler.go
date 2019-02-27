@@ -12,7 +12,6 @@ import (
 const (
 	mainPointerKeyCode = 500 + iota
 	FireKeyCode
-	visionKeyCode
 	VisionBoundTopLeft
 	VisionBoundBottomRight
 	FrontKeyCode
@@ -20,9 +19,6 @@ const (
 	wheelKeyCode
 )
 
-const mouseAccuracy = .185
-const mouseVisionDelay = time.Millisecond * 500
-const eventVisionEventUp = sdl.USEREVENT + 3
 const eventDirectionEvent = sdl.USEREVENT + 4
 const eventWheelEvent = sdl.USEREVENT + 5
 
@@ -34,8 +30,9 @@ var mouseIntervalArray = []time.Duration{
 }
 
 type controlHandler struct {
-	controller Controller
-	set        mouseEventSet
+	controller       Controller
+	visionController *visionController
+	set              mouseEventSet
 
 	keyState map[int]*int
 	keyMap   map[int]UserOperation
@@ -46,9 +43,7 @@ type controlHandler struct {
 	mouseKeyState map[uint8]*int
 	mouseKeyMap   map[uint8]UserOperation
 
-	visionCachePointer  Point
-	visionCenterPointer *Point
-	wheelCachePointer   Point
+	wheelCachePointer Point
 
 	directionController directionController
 	timer               map[uint32]*time.Timer
@@ -111,6 +106,7 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 func newControlHandler(controller Controller,
 	keyMap, ctrlKeyMap map[int]UserOperation,
 	mouseKeyMap map[uint8]UserOperation) *controlHandler {
+
 	ch := controlHandler{controller: controller}
 	controller.Register(&ch)
 	ch.keyState = make(map[int]*int)
@@ -122,6 +118,11 @@ func newControlHandler(controller Controller,
 	ch.directionController.keyMap = keyMap
 	// 默认是正常模式
 	ch.doubleHit = -1
+
+	// 视角控制
+	ch.visionController = newVisionController(controller,
+		keyMap[VisionBoundTopLeft].(*Point),
+		keyMap[VisionBoundBottomRight].(*Point))
 	return &ch
 }
 
@@ -134,20 +135,13 @@ func (ch *controlHandler) HandleControlEvent(c Controller, ent interface{}) inte
 }
 
 func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
-	switch event.GetType() {
-	case eventVisionEventUp:
-		var b bool
-		var e error
-		if ch.keyState[visionKeyCode] != nil {
-			b, e = ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[visionKeyCode], ch.visionCachePointer)
-			fingers.Recycle(ch.keyState[visionKeyCode])
-			ch.keyState[visionKeyCode] = nil
-			if debugOpt.Info() {
-				log.Println("视角控制，松开，点：", ch.visionCachePointer)
-			}
-		}
-		return b, e
 
+	// 处理视角 SDL 事件
+	if ch.visionController.handleSdlEvent(event.GetType()) {
+		return true, nil
+	}
+
+	switch event.GetType() {
 	case eventDirectionEvent:
 		return true, ch.directionController.sendMouseEvent(ch.controller)
 
@@ -181,88 +175,6 @@ func (ch *controlHandler) HandleSdlEvent(event sdl.Event) (bool, error) {
 	}
 
 	return false, nil
-}
-
-func (ch *controlHandler) outside(p *Point) bool {
-	ret := false
-	topLeft, bottomRight := ch.keyMap[VisionBoundTopLeft].(*Point), ch.keyMap[VisionBoundBottomRight].(*Point)
-	minW := uint16(topLeft.X)
-	maxW := uint16(bottomRight.X)
-	if p.X < minW {
-		ret = true
-		p.X = minW
-	} else if p.X > maxW {
-		ret = true
-		p.X = maxW
-	}
-
-	minH := uint16(topLeft.Y)
-	maxH := uint16(bottomRight.Y)
-	if p.Y < minH {
-		ret = true
-		p.Y = minH
-	} else if p.Y > maxH {
-		ret = true
-		p.Y = maxH
-	}
-
-	return ret
-}
-
-func (ch *controlHandler) getVisionCenterPoint() Point {
-	if ch.visionCenterPointer == nil {
-		topLeft, bottomRight := ch.keyMap[VisionBoundTopLeft].(*Point), ch.keyMap[VisionBoundBottomRight].(*Point)
-		ch.visionCenterPointer = &Point{
-			(topLeft.X + bottomRight.X) >> 1,
-			(topLeft.Y + bottomRight.Y) >> 1,
-		}
-	}
-	return *ch.visionCenterPointer
-}
-
-func fixMouseBlock(x int32) int32 {
-	fx := float64(x)
-	ret := int32(fx*mouseAccuracy + .5)
-	if ret == 0 && x != 0 {
-		if x > 0 {
-			ret = 1
-		} else {
-			ret = -1
-		}
-	}
-	return ret
-}
-
-func (ch *controlHandler) visionMoving(event *sdl.MouseMotionEvent, delta int) (bool, error) {
-	if ch.keyState[visionKeyCode] == nil {
-		ch.keyState[visionKeyCode] = fingers.GetId()
-		ch.visionCachePointer = ch.getVisionCenterPoint()
-		ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
-		if debugOpt.Info() {
-			log.Println("视角控制，开始，点：", ch.visionCachePointer)
-		}
-		return ch.sendMouseEvent(AMOTION_EVENT_ACTION_DOWN, *ch.keyState[visionKeyCode], ch.visionCachePointer)
-	} else {
-		deltaX := fixMouseBlock(event.XRel)
-		deltaY := fixMouseBlock(event.YRel)
-		ch.visionCachePointer.X = uint16(int32(ch.visionCachePointer.X) + deltaX)
-		ch.visionCachePointer.Y = uint16(int32(ch.visionCachePointer.Y) + deltaY + int32(delta))
-		if ch.outside(&ch.visionCachePointer) {
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[visionKeyCode], ch.visionCachePointer)
-			fingers.Recycle(ch.keyState[visionKeyCode])
-			ch.keyState[visionKeyCode] = nil
-			if debugOpt.Info() {
-				log.Printf("视角控制(%d, %d)，超出范围，点：%s\n", deltaX, deltaY, ch.visionCachePointer)
-			}
-			return b, e
-		} else {
-			ch.sendEventDelay(eventVisionEventUp, mouseVisionDelay)
-			if debugOpt.Info() {
-				log.Printf("视角控制(%d, %d)，点：%s\n", deltaX, deltaY, ch.visionCachePointer)
-			}
-			return ch.sendMouseEvent(AMOTION_EVENT_ACTION_MOVE, *ch.keyState[visionKeyCode], ch.visionCachePointer)
-		}
-	}
 }
 
 func (ch *controlHandler) stopContinuousFire() {
@@ -311,17 +223,14 @@ func (ch *controlHandler) handleMouseMotion(event *sdl.MouseMotionEvent) (bool, 
 	if sdl.GetRelativeMouseMode() {
 		// 无论如何，停止 mainPointer 的事件分发
 		ch.stopMainPointerMotion(event.X, event.Y)
-		return ch.visionMoving(event, 0)
+		ch.visionController.visionControl(event.XRel, event.YRel)
+		return true, nil
 	} else {
 		// 无论如何，关闭连击宏操作
 		ch.stopContinuousFire()
 
-		if ch.keyState[visionKeyCode] != nil {
-			b, e := ch.sendMouseEvent(AMOTION_EVENT_ACTION_UP, *ch.keyState[visionKeyCode], ch.visionCachePointer)
-			fingers.Recycle(ch.keyState[visionKeyCode])
-			ch.keyState[visionKeyCode] = nil
-			return b, e
-		}
+		// 视角控制手势退出
+		ch.visionController.fingerUp()
 
 		if event.State == sdl.BUTTON_LEFT {
 			ch.continueMainPointerMotion(event.X, event.Y)
@@ -735,5 +644,15 @@ func (ch *controlHandler) sendEventDelay(typ uint32, duration time.Duration) {
 		ch.timer[typ] = time.AfterFunc(duration, func() {
 			sdl.PushEvent(&sdl.UserEvent{Type: typ})
 		})
+	}
+}
+
+func (ch *controlHandler) stopEvent(typ uint32) {
+	if ch.timer == nil {
+		ch.timer = make(map[uint32]*time.Timer)
+	}
+
+	if ch.timer[typ] != nil {
+		ch.timer[typ].Stop()
 	}
 }
