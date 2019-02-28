@@ -8,16 +8,14 @@ import (
 )
 
 type Option struct {
-	Serial string
-	//Crop        string
-	Port int
-	//MaxSize     int
-	BitRate     int
-	Debug       DebugLevel
-	KeyMap      map[int]UserOperation
-	CtrlKeyMap  map[int]UserOperation
-	MouseKeyMap map[uint8]UserOperation
-	//VideoSize   string
+	Serial         string
+	Port           int
+	BitRate        int
+	Debug          DebugLevel
+	KeyMap         map[int]UserOperation
+	CtrlKeyMap     map[int]UserOperation
+	MouseKeyMap    map[uint8]UserOperation
+	MouseSensitive float64
 }
 
 func Main(opt *Option) (err error) {
@@ -25,6 +23,7 @@ func Main(opt *Option) (err error) {
 	defer runtime.UnlockOSThread()
 
 	debugOpt = opt.Debug
+	mouseSensitive = opt.MouseSensitive
 
 	svr := server{}
 	svrOpt := serverOption{serial: opt.Serial, localPort: opt.Port, bitRate: opt.BitRate}

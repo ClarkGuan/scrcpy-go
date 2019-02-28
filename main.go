@@ -49,13 +49,13 @@ func main() {
 	var bitRate int
 	var port int
 	var settingFile string
-	var correctedValue string
+	var sensitive float64
 
 	flag.IntVar(&debugLevel, "log", 0, "日志等级设置")
 	flag.IntVar(&bitRate, "bitrate", 8000000, "视频码率")
 	flag.IntVar(&port, "port", 27183, "adb 端口号")
 	flag.StringVar(&settingFile, "cfg", filepath.Join(sdl.GetBasePath(), "res", "settings.yml"), "配置文件路径")
-	flag.StringVar(&correctedValue, "vs", "", "视频大小修正值")
+	flag.Float64Var(&sensitive, "sens", scrcpy.DefaultMouseSensitive, "鼠标精度")
 	flag.Parse()
 
 	content, err := ioutil.ReadFile(settingFile)
@@ -117,18 +117,19 @@ func main() {
 		case "port":
 			port, _ = strconv.Atoi(arg.Value)
 
-		case "vs":
-			correctedValue = arg.Value
+		case "sens":
+			sensitive, _ = strconv.ParseFloat(arg.Value, 64)
 		}
 	}
 
 	option := scrcpy.Option{
-		Debug:       scrcpy.DebugLevelWrap(debugLevel),
-		BitRate:     bitRate,
-		Port:        port,
-		KeyMap:      keyMap,
-		CtrlKeyMap:  ctrlKeyMap,
-		MouseKeyMap: mouseKeyMap,
+		Debug:          scrcpy.DebugLevelWrap(debugLevel),
+		BitRate:        bitRate,
+		Port:           port,
+		KeyMap:         keyMap,
+		CtrlKeyMap:     ctrlKeyMap,
+		MouseKeyMap:    mouseKeyMap,
+		MouseSensitive: sensitive,
 	}
 	log.Println(scrcpy.Main(&option))
 }

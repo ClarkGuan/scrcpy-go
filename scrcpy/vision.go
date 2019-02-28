@@ -7,8 +7,10 @@ import (
 	"github.com/ClarkGuan/go-sdl2/sdl"
 )
 
+const DefaultMouseSensitive = .085
+
 // 鼠标精度控制
-const mouseAccuracy = .185
+var mouseSensitive = DefaultMouseSensitive
 
 // 自动释放手势时间间隔
 const mouseVisionDelay = time.Millisecond * 500
@@ -73,7 +75,7 @@ func (v *visionController) getVisionCenterPoint() *Point {
 
 func fixMouseBlock(x int32) int32 {
 	fx := float64(x)
-	ret := int32(fx*mouseAccuracy + .5)
+	ret := int32(fx*mouseSensitive + .5)
 	if ret == 0 && x != 0 {
 		if x > 0 {
 			ret = 1
