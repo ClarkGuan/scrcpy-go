@@ -45,6 +45,14 @@ type controlHandler struct {
 
 	wheelCachePointer Point
 
+	// 自动压枪处理
+	gunPress                   bool
+	gunPressOpr                *gunPressOpration
+	gunPressEnableTexture      sdl.Texture
+	gunPressEnableTextureSize  sdl.Rect
+	gunPressDisableTexture     sdl.Texture
+	gunPressDisableTextureSize sdl.Rect
+
 	directionController directionController
 	timer               map[uint32]*time.Timer
 	doubleHit           int
@@ -68,12 +76,14 @@ func (ch *controlHandler) Init(r sdl.Renderer) {
 	ch.doubleHitEnableTexture = make([]sdl.Texture, len(mouseIntervalArray))
 	ch.doubleHitEnableTextureSize = make([]sdl.Rect, len(mouseIntervalArray))
 	for i := range mouseIntervalArray {
-		ch.doubleHitEnableTexture[i], ch.doubleHitEnableTextureSize[i] = ch.initTextures(r, fmt.Sprintf("连击模式：%s", mouseIntervalArray[i]))
+		ch.doubleHitEnableTexture[i], ch.doubleHitEnableTextureSize[i] = ch.initTextures(r, fmt.Sprintf("连击模式：%s", mouseIntervalArray[i]), 50, 50)
 	}
-	ch.doubleHitDisableTexture, ch.doubleHitDisableTextureSize = ch.initTextures(r, "连击模式：关闭")
+	ch.doubleHitDisableTexture, ch.doubleHitDisableTextureSize = ch.initTextures(r, "连击模式：关闭", 50, 50)
+	ch.gunPressEnableTexture, ch.gunPressEnableTextureSize = ch.initTextures(r, "自动压枪：开启", 50, 100)
+	ch.gunPressDisableTexture, ch.gunPressDisableTextureSize = ch.initTextures(r, "自动压枪：关闭", 50, 100)
 }
 
-func (ch *controlHandler) initTextures(r sdl.Renderer, text string) (sdl.Texture, sdl.Rect) {
+func (ch *controlHandler) initTextures(r sdl.Renderer, text string, x, y int) (sdl.Texture, sdl.Rect) {
 	if surface, err := ch.font.GetTextSurface(text, sdl.Color{}); err != nil {
 		panic(err)
 	} else {
@@ -81,7 +91,7 @@ func (ch *controlHandler) initTextures(r sdl.Renderer, text string) (sdl.Texture
 			panic(err)
 		} else {
 			surface.Free()
-			size := getTextureSize(texture, 50, 50)
+			size := getTextureSize(texture, int32(x), int32(y))
 			return texture, size
 		}
 	}
@@ -101,6 +111,12 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 	default:
 		r.Copy(ch.doubleHitEnableTexture[ch.doubleHit], nil, &ch.doubleHitEnableTextureSize[ch.doubleHit])
 	}
+
+	if ch.gunPress {
+		r.Copy(ch.gunPressEnableTexture, nil, &ch.gunPressEnableTextureSize)
+	} else {
+		r.Copy(ch.gunPressDisableTexture, nil, &ch.gunPressDisableTextureSize)
+	}
 }
 
 func newControlHandler(controller Controller,
@@ -118,6 +134,8 @@ func newControlHandler(controller Controller,
 	ch.directionController.keyMap = keyMap
 	// 默认是正常模式
 	ch.doubleHit = -1
+	// 默认关闭自动压枪
+	ch.gunPress = false
 
 	// 视角控制
 	ch.visionController = newVisionController(controller,
@@ -194,6 +212,24 @@ func (ch *controlHandler) startContinuousFire(interval time.Duration) {
 	}
 }
 
+func (ch *controlHandler) stopGunPress() {
+	if ch.gunPressOpr != nil {
+		ch.gunPressOpr.Stop()
+		ch.gunPressOpr = nil
+	}
+}
+
+func (ch *controlHandler) startGunPress(interval time.Duration, delta int) {
+	if ch.gunPress {
+		if ch.gunPressOpr == nil {
+			ch.gunPressOpr = new(gunPressOpration)
+			ch.gunPressOpr.Start(ch.visionController, interval, delta)
+		} else {
+			ch.gunPressOpr.SetValues(interval, delta)
+		}
+	}
+}
+
 func (ch *controlHandler) startMainPointerMotion(x, y int32) {
 	if ch.keyState[mainPointerKeyCode] == nil {
 		ch.keyState[mainPointerKeyCode] = fingers.GetId()
@@ -245,6 +281,8 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 	if event.Button == sdl.BUTTON_LEFT {
 		// 无论如何，关闭连击宏操作
 		ch.stopContinuousFire()
+		// 无论如何，关闭压枪操作
+		ch.stopGunPress()
 
 		if sdl.GetRelativeMouseMode() {
 			// 无论如何，停止 mainPointer 的事件分发
@@ -266,6 +304,8 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 			default:
 				ch.startContinuousFire(mouseIntervalArray[ch.doubleHit])
 			}
+
+			ch.startGunPress(30*time.Millisecond, 1)
 		} else {
 			ch.startMainPointerMotion(event.X, event.Y)
 		}
@@ -288,6 +328,8 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 		ch.stopContinuousFire()
 		// 无论如何，停止 mainPointer 的事件分发
 		ch.stopMainPointerMotion(event.X, event.Y)
+		// 无论如何，关闭压枪操作
+		ch.stopGunPress()
 
 		if sdl.GetRelativeMouseMode() {
 			if ch.keyState[FireKeyCode] != nil {
@@ -558,6 +600,10 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 	} else {
 		// w,s,a,d 按键的方案不能被自定义按键方案覆盖
 		switch event.Keysym.Sym {
+		case sdl.K_F1:
+			ch.gunPress = !ch.gunPress
+			return true, nil
+
 		case sdl.K_w:
 			ch.directionController.frontUp()
 			return true, nil

@@ -143,9 +143,11 @@ func (v *visionController) fingerDown() {
 	}
 }
 
-func (v *visionController) fingerMove(x, y int32) {
-	x = fixMouseBlock(x)
-	y = fixMouseBlock(y)
+func (v *visionController) fingerMove(x, y int32, accurate bool) {
+	if !accurate {
+		x = fixMouseBlock(x)
+		y = fixMouseBlock(y)
+	}
 	v.cachePoint.X = uint16(int32(v.cachePoint.X) + x)
 	v.cachePoint.Y = uint16(int32(v.cachePoint.Y) + y)
 	if v.outside(&v.cachePoint) {
@@ -163,6 +165,14 @@ func (v *visionController) visionControl(x, y int32) {
 	if v.id == nil {
 		v.fingerDown()
 	} else {
-		v.fingerMove(x, y)
+		v.fingerMove(x, y, false)
+	}
+}
+
+func (v *visionController) visionControl2(x, y int32) {
+	if v.id == nil {
+		v.fingerDown()
+	} else {
+		v.fingerMove(x, y, true)
 	}
 }
