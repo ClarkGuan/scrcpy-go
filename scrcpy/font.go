@@ -43,6 +43,11 @@ func (tt *TextTexture) Update(renderer sdl.Renderer, f *Font, text string, color
 	}
 
 	tt.text = text
+	if len(tt.text) == 0 {
+		tt.texture = 0
+		return nil
+	}
+
 	surface, err := f.GetTextSurface(text, color)
 	if err != nil {
 		return err
@@ -55,7 +60,7 @@ func (tt *TextTexture) Update(renderer sdl.Renderer, f *Font, text string, color
 }
 
 func (tt *TextTexture) Render(renderer sdl.Renderer, dst *sdl.Rect) error {
-	if tt.texture == 0 {
+	if tt.texture == 0 || len(tt.text) == 0 {
 		return nil
 	}
 	return renderer.Copy(tt.texture, nil, dst)

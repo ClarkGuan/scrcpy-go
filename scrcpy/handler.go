@@ -30,6 +30,13 @@ var mouseIntervalArray = []time.Duration{
 	300 * time.Millisecond,
 }
 
+var gunPressArray = []int{
+	1,
+	2,
+	3,
+	4,
+}
+
 type controlHandler struct {
 	controller       Controller
 	visionController *visionController
@@ -47,7 +54,7 @@ type controlHandler struct {
 	wheelCachePointer Point
 
 	// 自动压枪处理
-	gunPress    bool
+	gunPress    int
 	gunPressOpr *gunPressOpration
 
 	directionController directionController
@@ -79,16 +86,18 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 
 	switch ch.doubleHit {
 	case -1:
-		fmt.Fprintf(&ch.textBuf, "连击模式：关闭  ")
+		// ignore
 
 	default:
-		fmt.Fprintf(&ch.textBuf, "连击模式：%s  ", mouseIntervalArray[ch.doubleHit])
+		fmt.Fprintf(&ch.textBuf, "连击模式：%s  ", mouseIntervalArray[ch.doubleHit%len(mouseIntervalArray)])
 	}
 
-	if ch.gunPress {
-		fmt.Fprintf(&ch.textBuf, "自动压枪：开启")
-	} else {
-		fmt.Fprintf(&ch.textBuf, "自动压枪：关闭")
+	switch ch.gunPress {
+	case -1:
+		// ignore
+
+	default:
+		fmt.Fprintf(&ch.textBuf, "自动压枪：%d", gunPressArray[ch.gunPress%len(gunPressArray)])
 	}
 
 	ch.textTexture.Update(r, ch.font, ch.textBuf.String(), sdl.Color{}, &ch.displayPosition)
@@ -111,7 +120,7 @@ func newControlHandler(controller Controller,
 	// 默认是正常模式
 	ch.doubleHit = -1
 	// 默认关闭自动压枪
-	ch.gunPress = false
+	ch.gunPress = -1
 
 	// 视角控制
 	ch.visionController = newVisionController(controller,
@@ -196,12 +205,12 @@ func (ch *controlHandler) stopGunPress() {
 }
 
 func (ch *controlHandler) startGunPress(interval time.Duration, delta int) {
-	if ch.gunPress {
+	if ch.gunPress >= 0 {
 		if ch.gunPressOpr == nil {
 			ch.gunPressOpr = new(gunPressOpration)
-			ch.gunPressOpr.Start(ch.visionController, interval, delta)
+			ch.gunPressOpr.Start(ch.visionController, interval, gunPressArray[ch.gunPress%len(gunPressArray)])
 		} else {
-			ch.gunPressOpr.SetValues(interval, delta)
+			ch.gunPressOpr.SetValues(interval, gunPressArray[ch.gunPress%len(gunPressArray)])
 		}
 	}
 }
@@ -464,19 +473,6 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 	alt := event.Keysym.Mod&(sdl.KMOD_RALT|sdl.KMOD_LALT) != 0
 	if alt {
-		switch event.Keysym.Sym {
-		case sdl.K_1:
-			ch.doubleHit = 0 % len(mouseIntervalArray)
-
-		case sdl.K_2:
-			ch.doubleHit = 1 % len(mouseIntervalArray)
-
-		case sdl.K_3:
-			ch.doubleHit = 2 % len(mouseIntervalArray)
-
-		case sdl.K_4:
-			ch.doubleHit = 3 % len(mouseIntervalArray)
-		}
 		return true, nil
 	}
 
@@ -546,17 +542,7 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 
 		case sdl.K_0:
 			ch.doubleHit = -1
-			return true, nil
-
-		case sdl.K_EQUALS:
-			ch.doubleHit = (ch.doubleHit + 1) % len(mouseIntervalArray)
-			return true, nil
-
-		case sdl.K_MINUS:
-			if ch.doubleHit <= 0 {
-				ch.doubleHit = len(mouseIntervalArray)
-			}
-			ch.doubleHit = (ch.doubleHit - 1) % len(mouseIntervalArray)
+			ch.gunPress = -1
 			return true, nil
 		}
 
@@ -577,7 +563,11 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 		// w,s,a,d 按键的方案不能被自定义按键方案覆盖
 		switch event.Keysym.Sym {
 		case sdl.K_F1:
-			ch.gunPress = !ch.gunPress
+			ch.gunPress = (ch.gunPress + 1) % len(gunPressArray)
+			return true, nil
+
+		case sdl.K_F2:
+			ch.doubleHit = (ch.doubleHit + 1) % len(mouseIntervalArray)
 			return true, nil
 
 		case sdl.K_w:
