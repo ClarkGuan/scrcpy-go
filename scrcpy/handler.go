@@ -1,6 +1,7 @@
 package scrcpy
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"path/filepath"
@@ -46,23 +47,18 @@ type controlHandler struct {
 	wheelCachePointer Point
 
 	// 自动压枪处理
-	gunPress                   bool
-	gunPressOpr                *gunPressOpration
-	gunPressEnableTexture      sdl.Texture
-	gunPressEnableTextureSize  sdl.Rect
-	gunPressDisableTexture     sdl.Texture
-	gunPressDisableTextureSize sdl.Rect
+	gunPress    bool
+	gunPressOpr *gunPressOpration
 
 	directionController directionController
 	timer               map[uint32]*time.Timer
 	doubleHit           int
 	*continuousFire
 
-	font                        *Font
-	doubleHitEnableTexture      []sdl.Texture
-	doubleHitEnableTextureSize  []sdl.Rect
-	doubleHitDisableTexture     sdl.Texture
-	doubleHitDisableTextureSize sdl.Rect
+	font            *Font
+	textTexture     *TextTexture
+	displayPosition sdl.Rect
+	textBuf         bytes.Buffer
 }
 
 func (ch *controlHandler) Init(r sdl.Renderer) {
@@ -73,50 +69,30 @@ func (ch *controlHandler) Init(r sdl.Renderer) {
 		}
 	}
 
-	ch.doubleHitEnableTexture = make([]sdl.Texture, len(mouseIntervalArray))
-	ch.doubleHitEnableTextureSize = make([]sdl.Rect, len(mouseIntervalArray))
-	for i := range mouseIntervalArray {
-		ch.doubleHitEnableTexture[i], ch.doubleHitEnableTextureSize[i] = ch.initTextures(r, fmt.Sprintf("连击模式：%s", mouseIntervalArray[i]), 50, 50)
-	}
-	ch.doubleHitDisableTexture, ch.doubleHitDisableTextureSize = ch.initTextures(r, "连击模式：关闭", 50, 50)
-	ch.gunPressEnableTexture, ch.gunPressEnableTextureSize = ch.initTextures(r, "自动压枪：开启", 50, 100)
-	ch.gunPressDisableTexture, ch.gunPressDisableTextureSize = ch.initTextures(r, "自动压枪：关闭", 50, 100)
-}
-
-func (ch *controlHandler) initTextures(r sdl.Renderer, text string, x, y int) (sdl.Texture, sdl.Rect) {
-	if surface, err := ch.font.GetTextSurface(text, sdl.Color{}); err != nil {
-		panic(err)
-	} else {
-		if texture, err := r.CreateTextureFromSurface(surface); err != nil {
-			panic(err)
-		} else {
-			surface.Free()
-			size := getTextureSize(texture, int32(x), int32(y))
-			return texture, size
-		}
-	}
-}
-
-func getTextureSize(t sdl.Texture, startX, startY int32) sdl.Rect {
-	_, _, w, h, _ := t.Query()
-	return sdl.Rect{startX, startY, w, h}
+	ch.textTexture = new(TextTexture)
+	ch.displayPosition.X = 50
+	ch.displayPosition.Y = 50
 }
 
 func (ch *controlHandler) Render(r sdl.Renderer) {
+	ch.textBuf.Reset()
+
 	switch ch.doubleHit {
 	case -1:
-		// 关闭
-		r.Copy(ch.doubleHitDisableTexture, nil, &ch.doubleHitDisableTextureSize)
+		fmt.Fprintf(&ch.textBuf, "连击模式：关闭\n")
 
 	default:
-		r.Copy(ch.doubleHitEnableTexture[ch.doubleHit], nil, &ch.doubleHitEnableTextureSize[ch.doubleHit])
+		fmt.Fprintf(&ch.textBuf, "连击模式：%s\n", mouseIntervalArray[ch.doubleHit])
 	}
 
 	if ch.gunPress {
-		r.Copy(ch.gunPressEnableTexture, nil, &ch.gunPressEnableTextureSize)
+		fmt.Fprintf(&ch.textBuf, "自动压枪：开启")
 	} else {
-		r.Copy(ch.gunPressDisableTexture, nil, &ch.gunPressDisableTextureSize)
+		fmt.Fprintf(&ch.textBuf, "自动压枪：关闭")
 	}
+
+	ch.textTexture.Update(r, ch.font, ch.textBuf.String(), sdl.Color{}, &ch.displayPosition)
+	ch.textTexture.Render(r, &ch.displayPosition)
 }
 
 func newControlHandler(controller Controller,
