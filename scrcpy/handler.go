@@ -64,7 +64,7 @@ type controlHandler struct {
 func (ch *controlHandler) Init(r sdl.Renderer) {
 	var err error
 	if ch.font == nil {
-		if ch.font, err = OpenFont(filepath.Join(sdl.GetBasePath(), "res", "YaHei.Consolas.1.12.ttf"), 45); err != nil {
+		if ch.font, err = OpenFont(filepath.Join(sdl.GetBasePath(), "res", "YaHei.Consolas.1.12.ttf"), 35); err != nil {
 			panic(err)
 		}
 	}
@@ -79,10 +79,10 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 
 	switch ch.doubleHit {
 	case -1:
-		fmt.Fprintf(&ch.textBuf, "连击模式：关闭\n")
+		fmt.Fprintf(&ch.textBuf, "连击模式：关闭  ")
 
 	default:
-		fmt.Fprintf(&ch.textBuf, "连击模式：%s\n", mouseIntervalArray[ch.doubleHit])
+		fmt.Fprintf(&ch.textBuf, "连击模式：%s  ", mouseIntervalArray[ch.doubleHit])
 	}
 
 	if ch.gunPress {
