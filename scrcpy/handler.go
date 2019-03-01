@@ -428,21 +428,29 @@ func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) 
 		// w,s,a,d 四个按键不能被自定义按键覆盖！
 		switch event.Keysym.Sym {
 		case sdl.K_w:
+			fallthrough
+		case sdl.K_UP:
 			ch.directionController.frontDown()
 			ch.directionController.Start()
 			return true, nil
 
 		case sdl.K_s:
+			fallthrough
+		case sdl.K_DOWN:
 			ch.directionController.backDown()
 			ch.directionController.Start()
 			return true, nil
 
 		case sdl.K_a:
+			fallthrough
+		case sdl.K_LEFT:
 			ch.directionController.leftDown()
 			ch.directionController.Start()
 			return true, nil
 
 		case sdl.K_d:
+			fallthrough
+		case sdl.K_RIGHT:
 			ch.directionController.rightDown()
 			ch.directionController.Start()
 			return true, nil
@@ -571,18 +579,26 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			return true, nil
 
 		case sdl.K_w:
+			fallthrough
+		case sdl.K_UP:
 			ch.directionController.frontUp()
 			return true, nil
 
 		case sdl.K_s:
+			fallthrough
+		case sdl.K_DOWN:
 			ch.directionController.backUp()
 			return true, nil
 
 		case sdl.K_a:
+			fallthrough
+		case sdl.K_LEFT:
 			ch.directionController.leftUp()
 			return true, nil
 
 		case sdl.K_d:
+			fallthrough
+		case sdl.K_RIGHT:
 			ch.directionController.rightUp()
 			return true, nil
 		}
