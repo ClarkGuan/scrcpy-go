@@ -14,8 +14,15 @@ import (
 )
 
 type EntryFile struct {
-	Entries []*Entry `yaml:"keys"`
-	Args    []*Arg   `yaml:"args"`
+	Entries []*Entry  `yaml:"keys"`
+	Args    []*Arg    `yaml:"args"`
+	Hits    []int     `yaml:"hits"`
+	Stables []*Stable `yaml:"stable"`
+}
+
+type Stable struct {
+	Pixel int `yaml:"pixel"`
+	Delay int `yaml:"delay"`
 }
 
 type Arg struct {
@@ -131,6 +138,15 @@ func main() {
 		MouseKeyMap:    mouseKeyMap,
 		MouseSensitive: sensitive,
 	}
+
+	for _, n := range entryFile.Hits {
+		option.Hits = append(option.Hits, time.Duration(n)*time.Millisecond)
+	}
+
+	for _, s := range entryFile.Stables {
+		option.Stables = append(option.Stables, &scrcpy.GunPressConfig{Delta: int32(s.Pixel), Interval: time.Duration(s.Delay) * time.Millisecond})
+	}
+
 	log.Println(scrcpy.Main(&option))
 }
 

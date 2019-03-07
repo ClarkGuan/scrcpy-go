@@ -1,6 +1,7 @@
 package scrcpy
 
 import (
+	"fmt"
 	"sync/atomic"
 	"time"
 )
@@ -9,34 +10,38 @@ import (
 type gunPressOperation struct {
 	animator
 	stopFlag int32
-	gunPressConfig
+	GunPressConfig
 }
 
-type gunPressConfig struct {
-	delta    int32
-	interval time.Duration
+type GunPressConfig struct {
+	Delta    int32
+	Interval time.Duration
 }
 
-func (gpo *gunPressOperation) Start(c *visionController, config gunPressConfig) {
+func (c *GunPressConfig) String() string {
+	return fmt.Sprintf("(%d, %s)", c.Delta, c.Interval)
+}
+
+func (gpo *gunPressOperation) Start(c *visionController, config GunPressConfig) {
 	gpo.animator.InProgress = gpo.inProgress
 	gpo.SetValues(config)
 	gpo.animator.Start(c)
 }
 
-func (gpo *gunPressOperation) SetValues(config gunPressConfig) {
-	if config.interval < 10*time.Millisecond {
-		gpo.interval = 10 * time.Millisecond
+func (gpo *gunPressOperation) SetValues(config GunPressConfig) {
+	if config.Interval < 10*time.Millisecond {
+		gpo.Interval = 10 * time.Millisecond
 	} else {
-		gpo.interval = config.interval
+		gpo.Interval = config.Interval
 	}
-	gpo.delta = int32(config.delta)
+	gpo.Delta = int32(config.Delta)
 }
 
 func (gpo *gunPressOperation) inProgress(data interface{}) time.Duration {
 	controller := data.(*visionController)
 	if atomic.LoadInt32(&gpo.stopFlag) != 1 {
-		controller.visionControl2(0, gpo.delta)
-		return gpo.interval
+		controller.visionControl2(0, gpo.Delta)
+		return gpo.Interval
 	}
 	return 0
 }

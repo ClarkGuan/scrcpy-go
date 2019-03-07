@@ -1,53 +1,58 @@
+hits:
+  - 30
+stable:
+  - { pixel: 3, delay: 28 }
+  - { pixel: 4, delay: 30 }
 keys:
-  - { code: SCRCPY_FIRE, point: { x: 288, y: 79 }, comment: "开火键" }
-  - { code: SCRCPY_VISION_TOPLEFT, point: { x: 565, y: 96 }, comment: "视野滑动事件左上坐标" }
-  - { code: SCRCPY_VISION_BOTTOMRIGHT, point: { x: 1419, y: 820 }, comment: "视野滑动事件右下坐标" }
-  - { code: SCRCPY_FRONT, point: { x: 313, y: 690 }, comment: "方向键 前" }
-  - { code: SCRCPY_BACK, point: { x: 313, y: 919 }, comment: "方向键 后" }
-  - { code: Space, point: { x: 1739, y: 568 }, comment: "跳/紧急停车" }
-  - { code: C, point: { x: 1733, y: 415 }, comment: "趴/下车" }
-  - { code: "Left Shift", point: { x: 1572, y: 831 }, comment: "蹲/加速/下沉" }
-  - { code: R, point: { x: 1465, y: 1004 }, comment: "换弹/投掷距离切换" }
-  - { code: E, point: { x: 1849, y: 735 }, comment: "准镜/喇叭" }
-  - { code: Q, point: { x: 260, y: 395 }, comment: "左摆头" }
-  - { code: Z, point: { x: 1575, y: 627 }, comment: "救人/上浮" }
-  - { code: T, point: { x: 1289, y: 265 }, comment: "舔包" }
-  - { code: Y, point: { x: 1380, y: 277 }, comment: "打开/收起拾取列表" }
-  - { code: F, point: { x: 1255, y: 381 }, comment: "拾取物品1" }
-  - { code: G, point: { x: 1241, y: 489 }, comment: "拾取物品2" }
-  - { code: H, point: { x: 1241, y: 591 }, comment: "拾取物品3" }
-  - { code: J, point: { x: 1241, y: 670 }, comment: "拾取物品4" }
-  - { code: V, point: { x: 1303, y: 738 }, comment: "开/关门" }
-  - { code: "1", point: { x: 831, y: 973 }, comment: "1号武器" }
-  - { code: "2", point: { x: 1097, y: 975 }, comment: "2号武器" }
-  - { code: "3", point: { x: 596, y: 1012 }, comment: "使用医疗物品" }
-  - { code: "4", point: { x: 1323, y: 1004 }, comment: "使用投掷物品" }
-  - { code: "5", point: { x: 593, y: 924 }, comment: "打开医疗物品列表" }
-  - { code: "6", point: { x: 1320, y: 916 }, comment: "打开投掷物品列表" }
-  - { code: "7", point: { x: 1179, y: 905 }, comment: "副武器" }
-  - { code: B, point: { x: 820, y: 902 }, comment: "1号武器单发" }
-  - { code: N, point: { x: 1086, y: 902 }, comment: "2号武器单发" }
-  - { code: Tab, point: { x: 14, y: 1001 }, show_pointer: true, comment: "背包列表" }
-  - { code: M, point: { x: 1866, y: 62 }, show_pointer: true, comment: "地图" }
-  - { code: X, point: { x: 1863, y: 446 }, comment: "打开准镜列表" }
-  - { code: ",", point: { x: 1861, y: 260 }, comment: "比例尺放大" }
-  - { code: ".", point: { x: 1869, y: 823 }, comment: "比例尺缩小" }
-  - { code: "/", point: { x: 1739, y: 1012 }, comment: "人物置中（地图）" }
-  - { code: "'", point: { x: 1337, y: 1021 }, comment: "取消标记点" }
-  - { code: "`", point: { x: 568, y: 557 }, comment: "取消投掷" }
-  - { code: K, macro: [ { point: { x: 591, y: 214 }, delay: 100 }, { point: { x: 596, y: 608 }, delay: 30 }, { point: { x: 591, y: 214 }, delay: 0 } ], comment: "准镜比例缩小" }
-  - { code: L, macro: [ { point: { x: 591, y: 214 }, delay: 100 }, { point: { x: 593, y: 325 }, delay: 30 }, { point: { x: 591, y: 214 }, delay: 0 } ], comment: "准镜比例放大" }
-  - { code: U, macro: [ { point: { x: 1866, y: 359 }, delay: 100 }, { point: { x: 1595, y: 155 }, delay: 0 } ], comment: "语音：前方有敌人" }
-  - { code: I, macro: [ { point: { x: 1866, y: 359 }, delay: 100 }, { point: { x: 1598, y: 231 }, delay: 0 } ], comment: "语音：我这有物资" }
-  - { code: "[", macro: [ { point: { x: 1609, y: 203 }, delay: 100 }, { point: { x: 1431, y: 164 }, delay: 0 } ], comment: "打开团队语音（发出声音）" }
-  - { code: "]", macro: [ { point: { x: 1609, y: 203 }, delay: 100 }, { point: { x: 1504, y: 166 }, delay: 0 } ], comment: "关闭团队语音（发出声音）" }
-  - { code: "1", type: ctrl, point: { x: 1643, y: 455 }, comment: "准镜切换1" }
-  - { code: "2", type: ctrl, point: { x: 1728, y: 452 }, comment: "准镜切换2" }
-  - { code: "3", type: ctrl, point: { x: 1606, y: 574 }, comment: "准镜切换3" }
-  - { code: "4", type: ctrl, point: { x: 1725, y: 577 }, comment: "准镜切换4" }
-  - { code: "5", type: ctrl, point: { x: 1606, y: 692 }, comment: "准镜切换5" }
-  - { code: "6", type: ctrl, point: { x: 1725, y: 687 }, comment: "准镜切换6" }
-  - { code: "7", type: ctrl, point: { x: 1606, y: 817 }, comment: "准镜切换7" }
-  - { code: "[", type: ctrl, macro: [ { point: { x: 1609, y: 115 }, delay: 100 }, { point: { x: 1400, y: 132 }, delay: 0 } ], comment: "打开团队语音（接收声音）" }
-  - { code: "]", type: ctrl, macro: [ { point: { x: 1609, y: 115 }, delay: 100 }, { point: { x: 1470, y: 132 }, delay: 0 } ], comment: "关闭团队语音（接收声音）" }
-  - { code: BUTTON_RIGHT, type: mouse, point: { x: 421, y: 390 }, comment: "右摆头" }
+  - { code: SCRCPY_FIRE, point: { x: 416, y: 86 }, comment: "开火键" }
+  - { code: SCRCPY_VISION_TOPLEFT, point: { x: 650, y: 100 }, comment: "视野滑动事件左上坐标" }
+  - { code: SCRCPY_VISION_BOTTOMRIGHT, point: { x: 1200, y: 850 }, comment: "视野滑动事件右下坐标" }
+  - { code: SCRCPY_FRONT, point: { x: 346, y: 689 }, comment: "方向键 前" }
+  - { code: SCRCPY_BACK, point: { x: 346, y: 913 }, comment: "方向键 后" }
+  - { code: Space, point: { x: 1883, y: 564 }, comment: "跳/紧急停车" }
+  - { code: C, point: { x: 1877, y: 413 }, comment: "趴/下车" }
+  - { code: "Left Shift", point: { x: 1716, y: 817 }, comment: "蹲/加速/下沉" }
+  - { code: R, point: { x: 1623, y: 1013 }, comment: "换弹/投掷距离切换" }
+  - { code: E, point: { x: 1995, y: 730 }, comment: "准镜/喇叭" }
+  - { code: Q, point: { x: 352, y: 395 }, comment: "左摆头" }
+  - { code: Z, point: { x: 1718, y: 638 }, comment: "救人/上浮" }
+  - { code: T, point: { x: 1444, y: 274 }, comment: "舔包" }
+  - { code: Y, point: { x: 1520, y: 281 }, comment: "打开/收起拾取列表" }
+  - { code: F, point: { x: 1447, y: 377 }, comment: "拾取物品1" }
+  - { code: G, point: { x: 1447, y: 490 }, comment: "拾取物品2" }
+  - { code: H, point: { x: 1447, y: 599 }, comment: "拾取物品3" }
+  - { code: J, point: { x: 1395, y: 670 }, comment: "拾取物品4" }
+  - { code: V, point: { x: 1424, y: 745 }, comment: "开/关门" }
+  - { code: "1", point: { x: 967, y: 983 }, comment: "1号武器" }
+  - { code: "2", point: { x: 1205, y: 977 }, comment: "2号武器" }
+  - { code: "3", point: { x: 715, y: 1013 }, comment: "使用医疗物品" }
+  - { code: "4", point: { x: 1444, y: 1020 }, comment: "使用投掷物品" }
+  - { code: "5", point: { x: 715, y: 930 }, comment: "打开医疗物品列表" }
+  - { code: "6", point: { x: 1441, y: 930 }, comment: "打开投掷物品列表" }
+  - { code: "7", point: { x: 1298, y: 907 }, comment: "副武器" }
+  - { code: B, point: { x: 950, y: 907 }, comment: "1号武器单发" }
+  - { code: N, point: { x: 1162, y: 904 }, comment: "2号武器单发" }
+  - { code: Tab, point: { x: 76, y: 1003 }, show_pointer: true, comment: "背包列表" }
+  - { code: M, point: { x: 2020, y: 53 }, show_pointer: true, comment: "地图" }
+  - { code: X, point: { x: 2014, y: 450 }, comment: "打开准镜列表" }
+  - { code: ",", point: { x: 2008, y: 264 }, comment: "比例尺放大" }
+  - { code: ".", point: { x: 2018, y: 825 }, comment: "比例尺缩小" }
+  - { code: "/", point: { x: 1885, y: 1021 }, comment: "人物置中（地图）" }
+  - { code: "'", point: { x: 1477, y: 1015 }, comment: "取消标记点" }
+  - { code: "`", point: { x: 662, y: 562 }, comment: "取消投掷" }
+  - { code: K, macro: [ { point: { x: 680, y: 217 }, delay: 100 }, { point: { x: 680, y: 601 }, delay: 30 }, { point: { x: 674, y: 223 }, delay: 0 } ], comment: "准镜比例缩小" }
+  - { code: L, macro: [ { point: { x: 678, y: 217 }, delay: 100 }, { point: { x: 680, y: 327 }, delay: 30 }, { point: { x: 678, y: 217 }, delay: 0 } ], comment: "准镜比例放大" }
+  - { code: U, macro: [ { point: { x: 2010, y: 358 }, delay: 100 }, { point: { x: 1720, y: 156 }, delay: 0 } ], comment: "语音：前方有敌人" }
+  - { code: I, macro: [ { point: { x: 2010, y: 358 }, delay: 100 }, { point: { x: 1738, y: 233 }, delay: 0 } ], comment: "语音：我这有物资" }
+  - { code: "[", macro: [ { point: { x: 1748, y: 197 }, delay: 100 }, { point: { x: 1577, y: 164 }, delay: 0 } ], comment: "打开团队语音（发出声音）" }
+  - { code: "]", macro: [ { point: { x: 1752, y: 203 }, delay: 100 }, { point: { x: 1654, y: 162 }, delay: 0 } ], comment: "关闭团队语音（发出声音）" }
+  - { code: "1", type: ctrl, point: { x: 1794, y: 457 }, comment: "准镜切换1" }
+  - { code: "2", type: ctrl, point: { x: 1868, y: 460 }, comment: "准镜切换2" }
+  - { code: "3", type: ctrl, point: { x: 1755, y: 576 }, comment: "准镜切换3" }
+  - { code: "4", type: ctrl, point: { x: 1855, y: 573 }, comment: "准镜切换4" }
+  - { code: "5", type: ctrl, point: { x: 1759, y: 695 }, comment: "准镜切换5" }
+  - { code: "6", type: ctrl, point: { x: 1878, y: 692 }, comment: "准镜切换6" }
+  - { code: "7", type: ctrl, point: { x: 1755, y: 811 }, comment: "准镜切换7" }
+  - { code: "[", type: ctrl, macro: [ { point: { x: 1748, y: 115 }, delay: 100 }, { point: { x: 1546, y: 133 }, delay: 0 } ], comment: "打开团队语音（接收声音）" }
+  - { code: "]", type: ctrl, macro: [ { point: { x: 1755, y: 123 }, delay: 100 }, { point: { x: 1616, y: 131 }, delay: 0 } ], comment: "关闭团队语音（接收声音）" }
+  - { code: BUTTON_RIGHT, type: mouse, point: { x: 507, y: 399 }, comment: "右摆头" }

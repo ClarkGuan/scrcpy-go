@@ -3,6 +3,7 @@ package scrcpy
 import (
 	"log"
 	"runtime"
+	"time"
 
 	"github.com/ClarkGuan/go-sdl2/sdl"
 )
@@ -16,6 +17,8 @@ type Option struct {
 	CtrlKeyMap     map[int]UserOperation
 	MouseKeyMap    map[uint8]UserOperation
 	MouseSensitive float64
+	Hits           []time.Duration
+	Stables        []*GunPressConfig
 }
 
 func Main(opt *Option) (err error) {
@@ -24,6 +27,7 @@ func Main(opt *Option) (err error) {
 
 	debugOpt = opt.Debug
 	mouseSensitive = opt.MouseSensitive
+	setConfigs(opt.Hits, opt.Stables)
 
 	svr := server{}
 	svrOpt := serverOption{serial: opt.Serial, localPort: opt.Port, bitRate: opt.BitRate}

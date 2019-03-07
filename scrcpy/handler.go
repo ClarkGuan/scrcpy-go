@@ -28,9 +28,20 @@ var mouseIntervalArray = []time.Duration{
 	30 * time.Millisecond,
 }
 
-var gunPressArray = []*gunPressConfig{
+var gunPressArray = []*GunPressConfig{
 	nil,
-	{4, 30 * time.Millisecond},
+	{3, 28 * time.Millisecond},
+}
+
+func setConfigs(hit []time.Duration, stables []*GunPressConfig) {
+	if len(hit) > 0 {
+		mouseIntervalArray = mouseIntervalArray[:1]
+		mouseIntervalArray = append(mouseIntervalArray, hit...)
+	}
+	if len(stables) > 0 {
+		gunPressArray = gunPressArray[:1]
+		gunPressArray = append(gunPressArray, stables...)
+	}
 }
 
 type controlHandler struct {
@@ -85,7 +96,7 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 		// ignore
 
 	default:
-		fmt.Fprintf(&ch.textBuf, "连击模式：%s  ", mouseIntervalArray[ch.doubleHit%len(mouseIntervalArray)])
+		fmt.Fprintf(&ch.textBuf, "连击模式：%v  ", mouseIntervalArray[ch.doubleHit%len(mouseIntervalArray)])
 	}
 
 	switch ch.gunPress {
@@ -93,7 +104,7 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 		// ignore
 
 	default:
-		fmt.Fprintf(&ch.textBuf, "自动压枪：%d", gunPressArray[ch.gunPress%len(gunPressArray)].delta)
+		fmt.Fprintf(&ch.textBuf, "自动压枪：%v", gunPressArray[ch.gunPress%len(gunPressArray)])
 	}
 
 	ch.textTexture.Update(r, ch.font, ch.textBuf.String(), sdl.Color{}, &ch.displayPosition)
