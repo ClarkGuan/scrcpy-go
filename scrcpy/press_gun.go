@@ -6,29 +6,33 @@ import (
 )
 
 // 压枪处理
-type gunPressOpration struct {
+type gunPressOperation struct {
 	animator
 	stopFlag int32
+	gunPressConfig
+}
+
+type gunPressConfig struct {
 	delta    int32
 	interval time.Duration
 }
 
-func (gpo *gunPressOpration) Start(c *visionController, interval time.Duration, delta int) {
+func (gpo *gunPressOperation) Start(c *visionController, config gunPressConfig) {
 	gpo.animator.InProgress = gpo.inProgress
-	gpo.SetValues(interval, delta)
+	gpo.SetValues(config)
 	gpo.animator.Start(c)
 }
 
-func (gpo *gunPressOpration) SetValues(interval time.Duration, delta int) {
-	if interval < 30*time.Millisecond {
-		gpo.interval = 30 * time.Millisecond
+func (gpo *gunPressOperation) SetValues(config gunPressConfig) {
+	if config.interval < 10*time.Millisecond {
+		gpo.interval = 10 * time.Millisecond
 	} else {
-		gpo.interval = interval
+		gpo.interval = config.interval
 	}
-	gpo.delta = int32(delta)
+	gpo.delta = int32(config.delta)
 }
 
-func (gpo *gunPressOpration) inProgress(data interface{}) time.Duration {
+func (gpo *gunPressOperation) inProgress(data interface{}) time.Duration {
 	controller := data.(*visionController)
 	if atomic.LoadInt32(&gpo.stopFlag) != 1 {
 		controller.visionControl2(0, gpo.delta)
@@ -37,6 +41,6 @@ func (gpo *gunPressOpration) inProgress(data interface{}) time.Duration {
 	return 0
 }
 
-func (gpo *gunPressOpration) Stop() {
+func (gpo *gunPressOperation) Stop() {
 	atomic.StoreInt32(&gpo.stopFlag, 1)
 }

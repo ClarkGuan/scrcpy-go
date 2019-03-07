@@ -24,17 +24,13 @@ const eventDirectionEvent = sdl.USEREVENT + 4
 const eventWheelEvent = sdl.USEREVENT + 5
 
 var mouseIntervalArray = []time.Duration{
+	0,
 	30 * time.Millisecond,
-	120 * time.Millisecond,
-	200 * time.Millisecond,
-	300 * time.Millisecond,
 }
 
-var gunPressArray = []int{
-	1,
-	2,
-	3,
-	4,
+var gunPressArray = []*gunPressConfig{
+	nil,
+	{4, 30 * time.Millisecond},
 }
 
 type controlHandler struct {
@@ -55,7 +51,7 @@ type controlHandler struct {
 
 	// 自动压枪处理
 	gunPress    int
-	gunPressOpr *gunPressOpration
+	gunPressOpr *gunPressOperation
 
 	directionController directionController
 	timer               map[uint32]*time.Timer
@@ -85,7 +81,7 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 	ch.textBuf.Reset()
 
 	switch ch.doubleHit {
-	case -1:
+	case 0:
 		// ignore
 
 	default:
@@ -93,11 +89,11 @@ func (ch *controlHandler) Render(r sdl.Renderer) {
 	}
 
 	switch ch.gunPress {
-	case -1:
+	case 0:
 		// ignore
 
 	default:
-		fmt.Fprintf(&ch.textBuf, "自动压枪：%d", gunPressArray[ch.gunPress%len(gunPressArray)])
+		fmt.Fprintf(&ch.textBuf, "自动压枪：%d", gunPressArray[ch.gunPress%len(gunPressArray)].delta)
 	}
 
 	ch.textTexture.Update(r, ch.font, ch.textBuf.String(), sdl.Color{}, &ch.displayPosition)
@@ -118,9 +114,9 @@ func newControlHandler(controller Controller,
 	ch.mouseKeyMap = mouseKeyMap
 	ch.directionController.keyMap = keyMap
 	// 默认是正常模式
-	ch.doubleHit = -1
+	ch.doubleHit = 0
 	// 默认关闭自动压枪
-	ch.gunPress = -1
+	ch.gunPress = 0
 
 	// 视角控制
 	ch.visionController = newVisionController(controller,
@@ -205,12 +201,12 @@ func (ch *controlHandler) stopGunPress() {
 }
 
 func (ch *controlHandler) startGunPress(interval time.Duration, delta int) {
-	if ch.gunPress >= 0 {
+	if ch.gunPress > 0 {
 		if ch.gunPressOpr == nil {
-			ch.gunPressOpr = new(gunPressOpration)
-			ch.gunPressOpr.Start(ch.visionController, interval, gunPressArray[ch.gunPress%len(gunPressArray)])
+			ch.gunPressOpr = new(gunPressOperation)
+			ch.gunPressOpr.Start(ch.visionController, *gunPressArray[ch.gunPress%len(gunPressArray)])
 		} else {
-			ch.gunPressOpr.SetValues(interval, gunPressArray[ch.gunPress%len(gunPressArray)])
+			ch.gunPressOpr.SetValues(*gunPressArray[ch.gunPress%len(gunPressArray)])
 		}
 	}
 }
@@ -274,7 +270,7 @@ func (ch *controlHandler) handleMouseButtonDown(event *sdl.MouseButtonEvent) (bo
 			ch.stopMainPointerMotion(event.X, event.Y)
 
 			switch ch.doubleHit {
-			case -1:
+			case 0:
 				if ch.keyState[FireKeyCode] == nil {
 					ch.keyState[FireKeyCode] = fingers.GetId()
 					if debugOpt.Debug() {
@@ -549,8 +545,8 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			return true, nil
 
 		case sdl.K_0:
-			ch.doubleHit = -1
-			ch.gunPress = -1
+			ch.doubleHit = 0
+			ch.gunPress = 0
 			return true, nil
 		}
 
@@ -570,11 +566,11 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 	} else {
 		// w,s,a,d 按键的方案不能被自定义按键方案覆盖
 		switch event.Keysym.Sym {
-		case sdl.K_F1:
+		case sdl.K_F2:
 			ch.gunPress = (ch.gunPress + 1) % len(gunPressArray)
 			return true, nil
 
-		case sdl.K_F2:
+		case sdl.K_F1:
 			ch.doubleHit = (ch.doubleHit + 1) % len(mouseIntervalArray)
 			return true, nil
 

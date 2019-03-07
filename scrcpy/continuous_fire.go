@@ -21,8 +21,8 @@ func (cf *continuousFire) Start(c Controller, interval time.Duration) {
 }
 
 func (cf *continuousFire) SetInterval(interval time.Duration) {
-	if interval < 30*time.Millisecond {
-		cf.interval = 30 * time.Millisecond
+	if interval < 10*time.Millisecond {
+		cf.interval = 10 * time.Millisecond
 	} else {
 		cf.interval = interval
 	}
