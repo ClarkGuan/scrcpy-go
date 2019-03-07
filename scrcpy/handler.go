@@ -554,11 +554,6 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 		case sdl.K_x:
 			sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
 			return true, nil
-
-		case sdl.K_0:
-			ch.doubleHit = 0
-			ch.gunPress = 0
-			return true, nil
 		}
 
 		keyCode := int(event.Keysym.Sym)
@@ -575,14 +570,23 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			}
 		}
 	} else {
-		// w,s,a,d 按键的方案不能被自定义按键方案覆盖
+		// F1, F2, F3, F4, w, s, a, d 按键的方案不能被自定义按键方案覆盖
 		switch event.Keysym.Sym {
-		case sdl.K_F2:
-			ch.gunPress = (ch.gunPress + 1) % len(gunPressArray)
+		case sdl.K_F1:
+			sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
 			return true, nil
 
-		case sdl.K_F1:
+		case sdl.K_F2:
+			ch.doubleHit = 0
+			ch.gunPress = 0
+			return true, nil
+
+		case sdl.K_F3:
 			ch.doubleHit = (ch.doubleHit + 1) % len(mouseIntervalArray)
+			return true, nil
+
+		case sdl.K_F4:
+			ch.gunPress = (ch.gunPress + 1) % len(gunPressArray)
 			return true, nil
 
 		case sdl.K_w:
