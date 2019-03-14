@@ -1,3 +1,9 @@
+args:
+  - { name: sens, value: "0.105" }
+hits:
+  - 30
+stable:
+  - { pixel: 3, delay: 28 }
 keys:
   - { code: SCRCPY_FIRE, point: { x: 324, y: 113 }, comment: "开火键" }
   - { code: SCRCPY_VISION_TOPLEFT, point: { x: 650, y: 100 }, comment: "视野滑动事件左上坐标" }
