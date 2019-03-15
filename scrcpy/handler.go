@@ -570,19 +570,19 @@ func (ch *controlHandler) handleKeyUp(event *sdl.KeyboardEvent) (bool, error) {
 			}
 		}
 	} else {
-		n := event.Keysym.Sym - sdl.K_F3
-		if n >= 0 && n <= 9 {
+		n := event.Keysym.Sym - sdl.K_F2
+		if n >= 0 && n <= (sdl.K_F12-sdl.K_F2) {
 			ch.gunPress = int(n) % len(gunPressArray)
 			return true, nil
 		}
 
-		// F1, F2, w, s, a, d 按键的方案不能被自定义按键方案覆盖
+		// Return, F1, w, s, a, d 按键的方案不能被自定义按键方案覆盖
 		switch event.Keysym.Sym {
-		case sdl.K_F1:
+		case sdl.K_RETURN:
 			sdl.SetRelativeMouseMode(!sdl.GetRelativeMouseMode())
 			return true, nil
 
-		case sdl.K_F2:
+		case sdl.K_F1:
 			ch.doubleHit = (ch.doubleHit + 1) % len(mouseIntervalArray)
 			return true, nil
 

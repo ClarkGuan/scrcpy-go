@@ -37,7 +37,7 @@ func (cf *continuousFire) inProgress(data interface{}) time.Duration {
 			cf.id = fingers.GetId()
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_DOWN, *cf.id)
 			cf.state++
-			return 30 * time.Millisecond
+			return cf.interval
 
 		case 1:
 			cf.sendMouseEvent(c, AMOTION_EVENT_ACTION_UP, *cf.id)

@@ -1,8 +1,9 @@
 args:
   - { name: sens, value: "0.125" }
 hits:
-  - 30
+  - 10
 stable:
+  - { pixel: 1, delay: 30 }
   - { pixel: 2, delay: 30 }
   - { pixel: 3, delay: 30 }
 keys:
