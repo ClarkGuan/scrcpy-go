@@ -351,10 +351,10 @@ func (ch *controlHandler) handleMouseButtonUp(event *sdl.MouseButtonEvent) (bool
 }
 
 func (ch *controlHandler) handleKeyDown(event *sdl.KeyboardEvent) (bool, error) {
-	if event.Repeat > 0 {
-		// 减少事件传递，提升效率，降低传输数据量
-		return true, nil
-	}
+	//if event.Repeat > 0 {
+	//	// 减少事件传递，提升效率，降低传输数据量
+	//	return true, nil
+	//}
 
 	alt := event.Keysym.Mod&(sdl.KMOD_RALT|sdl.KMOD_LALT) != 0
 	if alt {
