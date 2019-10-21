@@ -17,10 +17,11 @@
 4. ffmpeg
 5. Android adb 工具
 6. yaml
+7. pkg-config 编译配置工具
 
 ### 构建
 ```bash
-brew install sdl2 sdl2_ttf ffmpeg go
+brew install sdl2 sdl2_ttf ffmpeg pkg-config go
 go get github.com/ClarkGuan/scrcpy-go
 ```
 
