@@ -11,7 +11,7 @@
 目前只支持在 MacOS 上运行（偷懒:-D），后面可以考虑支持 Windows 和 Linux。
 
 ### 依赖
-1. Golang 环境
+1. Golang 环境（设置 $GOPATH 环境变量）
 2. sdl2
 3. sdl2_ttf
 4. ffmpeg
@@ -22,7 +22,7 @@
 ### 构建
 ```bash
 brew install sdl2 sdl2_ttf ffmpeg pkg-config go
-go get github.com/ClarkGuan/scrcpy-go
+go get -d github.com/ClarkGuan/scrcpy-go && cd $GOPATH/src/github.com/ClarkGuan/scrcpy-go && go build && ./scrcpy-go
 ```
 
 ### 使用说明
