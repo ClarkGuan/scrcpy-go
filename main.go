@@ -153,7 +153,7 @@ func main() {
 func parseUserOperation(entry *Entry) scrcpy.UserOperation {
 	if entry.Point != nil {
 		if entry.ShowPointer {
-			return &scrcpy.SPoint{uint16(entry.Point.X), uint16(entry.Point.Y)}
+			return &scrcpy.SPoint{X: uint16(entry.Point.X), Y: uint16(entry.Point.Y)}
 		} else {
 			return &scrcpy.Point{uint16(entry.Point.X), uint16(entry.Point.Y)}
 		}
@@ -161,7 +161,7 @@ func parseUserOperation(entry *Entry) scrcpy.UserOperation {
 		var list []*scrcpy.PointMacro
 		for _, m := range entry.Macro {
 			list = append(list, &scrcpy.PointMacro{
-				Point:    scrcpy.Point{uint16(m.Point.X), uint16(m.Point.Y)},
+				Point:    scrcpy.Point{X: uint16(m.Point.X), Y: uint16(m.Point.Y)},
 				Interval: time.Duration(m.Delay) * time.Millisecond})
 		}
 		return list
