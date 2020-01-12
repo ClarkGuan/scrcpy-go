@@ -8,22 +8,33 @@ public final class Server {
         // not instantiable
     }
 
-    private static void scrcpy(Options options) throws IOException {
+    private static void scrcpy(Options options) throws IOException, NoSuchFieldException, IllegalAccessException {
         final Device device = new Device(options);
-        boolean tunnelForward = options.isTunnelForward();
-        try (DesktopConnection connection = DesktopConnection.open(device, tunnelForward)) {
-            ScreenEncoder screenEncoder = new ScreenEncoder(options.getSendFrameMeta(), options.getBitRate());
 
-            // asynchronous
-            startEventController(device, connection);
-
-            try {
-                // synchronous
-                screenEncoder.streamScreen(device, connection.getFd());
-            } catch (IOException e) {
-                // this is expected on close
-                Ln.d("Screen streaming stopped");
+        if (options.getHost() != null) {
+            try (DesktopConnection connection = DesktopConnection.open(device, options.getHost(), options.getPort())) {
+                startServerInner(options, device, connection);
             }
+        } else {
+            boolean tunnelForward = options.isTunnelForward();
+            try (DesktopConnection connection = DesktopConnection.open(device, tunnelForward)) {
+                startServerInner(options, device, connection);
+            }
+        }
+    }
+
+    private static void startServerInner(Options options, Device device, DesktopConnection connection) {
+        ScreenEncoder screenEncoder = new ScreenEncoder(options.getSendFrameMeta(), options.getBitRate());
+
+        // asynchronous
+        startEventController(device, connection);
+
+        try {
+            // synchronous
+            screenEncoder.streamScreen(device, connection.getFd());
+        } catch (IOException e) {
+            // this is expected on close
+            Ln.d("Screen streaming stopped");
         }
     }
 
@@ -59,9 +70,21 @@ public final class Server {
         if (args.length < 2) {
             return options;
         }
-        // use "adb forward" instead of "adb tunnel"? (so the server must listen)
-        boolean tunnelForward = Boolean.parseBoolean(args[1]);
-        options.setTunnelForward(tunnelForward);
+
+        if (args[1] != null && args[1].contains(":")) {
+            int index = args[1].indexOf(':');
+            options.setHost(args[1].substring(0, index));
+            try {
+                int port = Integer.parseInt(args[1].substring(index + 1));
+                options.setPort(port);
+            } catch (NumberFormatException e) {
+                options.setPort(10240);
+            }
+        } else {
+            // use "adb forward" instead of "adb tunnel"? (so the server must listen)
+            boolean tunnelForward = Boolean.parseBoolean(args[1]);
+            options.setTunnelForward(tunnelForward);
+        }
 
         if (args.length < 3) {
             return options;

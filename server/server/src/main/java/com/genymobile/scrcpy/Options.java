@@ -7,6 +7,8 @@ public class Options {
 //    private Rect crop;
     private boolean sendFrameMeta; // send PTS so that the client may record properly
 //    private Point correctedValue;
+    private String host;
+    private int port;
 
 //    public int getMaxSize() {
 //        return maxSize;
@@ -55,4 +57,20 @@ public class Options {
 //    public void setCorrectedValue(Point correctedValue) {
 //        this.correctedValue = correctedValue;
 //    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public void setHost(String host) {
+        this.host = host;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
 }

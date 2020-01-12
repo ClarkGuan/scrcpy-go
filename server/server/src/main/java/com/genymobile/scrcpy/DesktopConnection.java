@@ -8,6 +8,9 @@ import java.io.Closeable;
 import java.io.FileDescriptor;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
+import java.net.Socket;
+import java.net.SocketImpl;
 import java.nio.charset.StandardCharsets;
 
 public final class DesktopConnection implements Closeable {
@@ -16,16 +19,32 @@ public final class DesktopConnection implements Closeable {
 
     private static final String SOCKET_NAME = "scrcpy";
 
-    private final LocalSocket socket;
-    private final InputStream inputStream;
-    private final FileDescriptor fd;
+    private LocalSocket localSock;
+    private Socket tcpSock;
+    private InputStream inputStream;
+    private FileDescriptor fd;
 
     private final ControlEventReader reader = new ControlEventReader();
 
-    private DesktopConnection(LocalSocket socket) throws IOException {
-        this.socket = socket;
-        inputStream = socket.getInputStream();
-        fd = socket.getFileDescriptor();
+    private DesktopConnection(LocalSocket sock) throws IOException {
+        this.localSock = sock;
+        inputStream = localSock.getInputStream();
+        fd = localSock.getFileDescriptor();
+    }
+
+    private DesktopConnection(Socket sock) throws IOException, NoSuchFieldException, IllegalAccessException {
+        tcpSock = sock;
+        inputStream = tcpSock.getInputStream();
+        fd = getFileDescriptorFromSocket(tcpSock);
+    }
+
+    private static FileDescriptor getFileDescriptorFromSocket(Socket sock) throws NoSuchFieldException, IllegalAccessException {
+        Field implField = Socket.class.getDeclaredField("impl");
+        implField.setAccessible(true);
+        SocketImpl impl = (SocketImpl) implField.get(sock);
+        Field fdField = SocketImpl.class.getDeclaredField("fd");
+        fdField.setAccessible(true);
+        return (FileDescriptor) fdField.get(impl);
     }
 
     private static LocalSocket connect(String abstractName) throws IOException {
@@ -59,10 +78,24 @@ public final class DesktopConnection implements Closeable {
         return connection;
     }
 
+    public static DesktopConnection open(Device device, String host, int port) throws IOException, NoSuchFieldException, IllegalAccessException {
+        Socket socket = new Socket(host, port);
+        DesktopConnection connection = new DesktopConnection(socket);
+        Size videoSize = device.getScreenInfo().getVideoSize();
+        connection.send(Device.getDeviceName(), videoSize.getWidth(), videoSize.getHeight());
+        return connection;
+    }
+
     public void close() throws IOException {
-        socket.shutdownInput();
-        socket.shutdownOutput();
-        socket.close();
+        if (localSock != null) {
+            localSock.shutdownInput();
+            localSock.shutdownOutput();
+            localSock.close();
+        } else if (tcpSock != null) {
+            tcpSock.shutdownInput();
+            tcpSock.shutdownOutput();
+            tcpSock.close();
+        }
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")
