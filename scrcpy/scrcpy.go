@@ -11,6 +11,7 @@ import (
 type Option struct {
 	Serial         string
 	Port           int
+	OverTcp        bool
 	BitRate        int
 	Debug          DebugLevel
 	KeyMap         map[int]UserOperation
@@ -30,7 +31,7 @@ func Main(opt *Option) (err error) {
 	setConfigs(opt.Hits, opt.Stables)
 
 	svr := server{}
-	svrOpt := serverOption{serial: opt.Serial, localPort: opt.Port, bitRate: opt.BitRate}
+	svrOpt := serverOption{serial: opt.Serial, localPort: opt.Port, bitRate: opt.BitRate, overTcp: opt.OverTcp}
 
 	if err = svr.Start(&svrOpt); err != nil {
 		return

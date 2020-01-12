@@ -29,6 +29,7 @@ type serverOption struct {
 	bitRate int
 	//crop      string
 	//videoSize string
+	overTcp bool
 }
 
 type server struct {
@@ -47,6 +48,19 @@ type server struct {
 }
 
 func (svr *server) Start(opt *serverOption) (err error) {
+	if opt.overTcp {
+		return svr.startOverTcp(opt)
+	} else {
+		return svr.startOverUsb(opt)
+	}
+}
+
+func (svr *server) startOverTcp(opt *serverOption) error {
+	svr.serverOption = *opt
+	return svr.listenOnPort()
+}
+
+func (svr *server) startOverUsb(opt *serverOption) (err error) {
 	svr.serverOption = *opt
 
 	if err = svr.pushRemote(); err != nil {
@@ -78,7 +92,7 @@ func (svr *server) Start(opt *serverOption) (err error) {
 }
 
 func (svr *server) ConnectTo() (err error) {
-	if !svr.tunnelForward {
+	if svr.overTcp || !svr.tunnelForward {
 		if svr.deviceConn, err = svr.listener.Accept(); err != nil {
 			return
 		}
@@ -89,7 +103,9 @@ func (svr *server) ConnectTo() (err error) {
 	}
 
 	svr.stopListen()
-	svr.removeRemote()
+	if !svr.overTcp {
+		svr.removeRemote()
+	}
 	svr.serverCopyToDevice = false
 
 	svr.disableTunnel()
@@ -147,6 +163,10 @@ func (svr *server) pushRemote() error {
 }
 
 func (svr *server) removeRemote() error {
+	if svr.overTcp {
+		return nil
+	}
+
 	return adbRemovePath(svr.serial, deviceServerPath)
 }
 
@@ -160,6 +180,10 @@ func (svr *server) enableTunnel() (err error) {
 }
 
 func (svr *server) disableTunnel() error {
+	if svr.overTcp {
+		return nil
+	}
+
 	if svr.tunnelForward {
 		return svr.disableTunnelForward()
 	} else {
@@ -205,7 +229,7 @@ func (svr *server) listenOnPort() (err error) {
 }
 
 func (svr *server) stopListen() error {
-	if !svr.tunnelForward {
+	if svr.overTcp || !svr.tunnelForward {
 		return svr.listener.Close()
 	}
 	return nil

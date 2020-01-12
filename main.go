@@ -57,12 +57,14 @@ func main() {
 	var port int
 	var settingFile string
 	var sensitive float64
+	var overTcp bool
 
 	flag.IntVar(&debugLevel, "log", 0, "日志等级设置")
 	flag.IntVar(&bitRate, "bitrate", 8000000, "视频码率")
 	flag.IntVar(&port, "port", 27183, "adb 端口号")
 	flag.StringVar(&settingFile, "cfg", filepath.Join(sdl.GetBasePath(), "res", "settings.yml"), "配置文件路径")
 	flag.Float64Var(&sensitive, "sens", scrcpy.DefaultMouseSensitive, "鼠标精度")
+	flag.BoolVar(&overTcp, "overtcp", false, "通过局域网连接")
 	flag.Parse()
 
 	content, err := ioutil.ReadFile(settingFile)
@@ -126,7 +128,14 @@ func main() {
 
 		case "sens":
 			sensitive, _ = strconv.ParseFloat(arg.Value, 64)
+
+		case "overtcp":
+			overTcp = true
 		}
+	}
+
+	if overTcp && port == 27183 {
+		port = 10240
 	}
 
 	option := scrcpy.Option{
@@ -137,6 +146,7 @@ func main() {
 		CtrlKeyMap:     ctrlKeyMap,
 		MouseKeyMap:    mouseKeyMap,
 		MouseSensitive: sensitive,
+		OverTcp:        overTcp,
 	}
 
 	for _, n := range entryFile.Hits {
